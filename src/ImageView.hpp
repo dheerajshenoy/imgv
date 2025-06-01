@@ -10,6 +10,7 @@
 #include <QScrollBar>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QMovie>
 
 class ImageView : public QWidget
 {
@@ -23,7 +24,7 @@ public:
         m_dpr = dpr;
         render();
     }
-    void render() noexcept;
+
     void zoomIn() noexcept;
     void zoomOut() noexcept;
     void rotateClock() noexcept;
@@ -36,14 +37,31 @@ public:
     void scrollDown() noexcept;
     QString fileName() noexcept;
     QString baseName() noexcept;
-    inline QString filePath() noexcept { return m_filepath; }
-    inline QString fileSize() noexcept { return m_filesize; }
+    inline QString filePath() noexcept
+    {
+        return m_filepath;
+    }
+    inline QString fileSize() noexcept
+    {
+        return m_filesize;
+    }
+
+protected:
+    void showEvent(QShowEvent *e) override;
+    void hideEvent(QHideEvent *e) override;
 
 private:
+    void render() noexcept;
+    void renderGif() noexcept;
     QString humanReadableSize(qint64 bytes) noexcept;
+    void updateGifFrame(int frameNumber) noexcept;
+    void stopGifAnimation() noexcept;
+    void startGifAnimation() noexcept;
+
+    bool m_isGif{false};
 
     float m_dpr{1.0f};
-    QImage magickImageToQImage(const std::string &path) noexcept;
+    QImage magickImageToQImage(Magick::Image &image) noexcept;
     GraphicsView *m_gview;
     QGraphicsScene *m_gscene;
     QGraphicsPixmapItem *m_pix_item{new QGraphicsPixmapItem()};
@@ -53,4 +71,5 @@ private:
     QPixmap m_pix;
     QScrollBar *m_vscrollbar, *m_hscrollbar;
     Minimap *m_minimap;
+    QMovie *m_movie{nullptr};
 };

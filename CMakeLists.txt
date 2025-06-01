@@ -25,6 +25,9 @@ add_definitions( -DMAGICKCORE_QUANTUM_DEPTH=16 )
 add_definitions( -DMAGICKCORE_HDRI_ENABLE=0 )
 find_package(ImageMagick COMPONENTS Magick++)
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(MAGICKPP REQUIRED Magick++)
+
 add_executable(${PROJECT_NAME}
     src/main.cpp
     src/ImageView.cpp
@@ -35,6 +38,8 @@ add_executable(${PROJECT_NAME}
     src/GraphicsView.cpp
 )
 
+include_directories(${MAGICKPP_INCLUDE_DIRS})
+link_directories(${MAGICKPP_LIBRARY_DIRS})
 include_directories(${ImageMagick_INCLUDE_DIRS})
 # qt_add_resources(RESOURCES resources.qrc)
 
@@ -44,11 +49,12 @@ target_link_libraries(${PROJECT_NAME}
     Qt6::Widgets
     Qt6::Core
     ${ImageMagick_LIBRARIES}
+    ${MAGICKPP_LIBRARIES}
 )
 
-# install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
-# install(FILES dodo.desktop DESTINATION share/applications)
+install(FILES ${PROJECT_NAME}.desktop DESTINATION share/applications)
 
 # Install icons to correct freedesktop-compliant locations
 # install(DIRECTORY resources/hicolor

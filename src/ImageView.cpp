@@ -7,8 +7,8 @@
 ImageView::ImageView(QWidget *parent) : QWidget(parent)
 {
     QVBoxLayout *layout = new QVBoxLayout();
-    m_gview = new GraphicsView();
-    m_gscene = new QGraphicsScene();
+    m_gview             = new GraphicsView();
+    m_gscene            = new QGraphicsScene();
     layout->addWidget(m_gview);
     m_gview->setScene(m_gscene);
     m_gscene->addItem(m_pix_item);
@@ -22,35 +22,34 @@ ImageView::ImageView(QWidget *parent) : QWidget(parent)
 void
 ImageView::openFile(const QString &filepath) noexcept
 {
-    m_filepath = filepath;
-    QFuture<void> future = QtConcurrent::run([&] {
-            auto bytes = QFileInfo(m_filepath).size();
-            QString str = humanReadableSize(bytes);
-            m_filesize = str;
-            });
+    m_filepath           = filepath;
+    QFuture<void> future = QtConcurrent::run([&]
+    {
+        auto bytes  = QFileInfo(m_filepath).size();
+        QString str = humanReadableSize(bytes);
+        m_filesize  = str;
+    });
 
+    m_isGif = false;
+    stopGifAnimation();
     render();
 
     m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
     m_gview->centerOn(m_pix_item);
-
 }
 
 QImage
-ImageView::magickImageToQImage(const std::string &file) noexcept
+ImageView::magickImageToQImage(Magick::Image &image) noexcept
 {
-    Magick::Image image;
-    image.read(file);
     int width  = image.columns();
     int height = image.rows();
 
-    const bool hasAlpha = image.alpha();
-    const std::string format = hasAlpha ? "RGBA" : "RGB";
+    const bool hasAlpha            = image.alpha();
+    const std::string format       = hasAlpha ? "RGBA" : "RGB";
     const QImage::Format imgFormat = hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_RGB888;
 
     const int bytesPerPixel = hasAlpha ? 4 : 3;
     std::vector<unsigned char> buffer(width * height * bytesPerPixel);
-
 
     QImage img(width, height, imgFormat);
     image.write(0, 0, width, height, format, Magick::CharPixel, img.bits());
@@ -64,15 +63,24 @@ ImageView::magickImageToQImage(const std::string &file) noexcept
 void
 ImageView::render() noexcept
 {
-    QImage img = magickImageToQImage(m_filepath.toStdString());
-    m_pix      = QPixmap::fromImage(img);
-    m_pix.setDevicePixelRatio(m_dpr);
-    m_pix_item->setPixmap(m_pix);
+    Magick::Image image;
+    image.read(m_filepath.toStdString());
 
-    auto bounds = m_pix_item->boundingRect();
-    int margin = 100;
-    QRectF padded = bounds.adjusted(-margin, -margin, margin, margin);
-    m_gview->setSceneRect(padded);
+    if (image.magick() == "GIF")
+        renderGif();
+    else
+    {
+        QImage img = magickImageToQImage(image);
+        m_pix      = QPixmap::fromImage(img);
+        m_pix.setDevicePixelRatio(m_dpr);
+        m_pix_item->setPixmap(m_pix);
+
+        auto bounds   = m_pix_item->boundingRect();
+        int margin    = 100;
+        QRectF padded = bounds.adjusted(-margin, -margin, margin, margin);
+        m_gview->setSceneRect(padded);
+    }
+
 }
 
 void
@@ -174,15 +182,74 @@ ImageView::baseName() noexcept
     return QFileInfo(m_filepath).baseName();
 }
 
-
-QString ImageView::humanReadableSize(qint64 bytes) noexcept {
-    static const char *sizes[] = { "B", "KB", "MB", "GB", "TB" };
-    double len = bytes;
-    int order = 0;
-    while (len >= 1024 && order < 4) {
+QString
+ImageView::humanReadableSize(qint64 bytes) noexcept
+{
+    static const char *sizes[] = {"B", "KB", "MB", "GB", "TB"};
+    double len                 = bytes;
+    int order                  = 0;
+    while (len >= 1024 && order < 4)
+    {
         order++;
         len /= 1024.0;
     }
     return QString("%1 %2").arg(len, 0, 'f', 2).arg(sizes[order]);
 }
 
+void
+ImageView::renderGif() noexcept
+{
+    if (m_movie)
+    {
+        m_movie->stop();
+        disconnect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
+        delete m_movie;
+        m_movie = nullptr;
+    }
+    m_isGif = true;
+    m_movie = new QMovie(m_filepath, QByteArray(), this);
+    connect(m_movie, &QMovie::frameChanged, this, &ImageView::updateGifFrame);
+    m_movie->start();
+}
+
+void
+ImageView::updateGifFrame(int /*frameNumber*/) noexcept
+{
+    if (!m_movie)
+        return;
+
+    QPixmap frame = m_movie->currentPixmap();
+    m_pix_item->setPixmap(frame);
+    m_gscene->setSceneRect(m_pix_item->boundingRect());
+}
+
+void ImageView::stopGifAnimation() noexcept
+{
+    if (m_movie)
+        m_movie->stop();
+}
+
+void ImageView::startGifAnimation() noexcept
+{
+    if (m_movie)
+        m_movie->start();
+}
+
+void ImageView::showEvent(QShowEvent *e)
+{
+    if (m_isGif)
+    {
+        startGifAnimation();
+    }
+
+    QWidget::showEvent(e);
+}
+
+void ImageView::hideEvent(QHideEvent *e)
+{
+    if (m_isGif)
+    {
+        stopGifAnimation();
+    }
+    QWidget::hideEvent(e);
+}
