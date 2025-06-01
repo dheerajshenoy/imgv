@@ -9,6 +9,7 @@ ImageView::ImageView(QWidget *parent) : QWidget(parent)
     m_gview->setResizeAnchor(QGraphicsView::ViewportAnchor::AnchorUnderMouse);
     m_gview->setTransformationAnchor(QGraphicsView::ViewportAnchor::AnchorViewCenter);
     setLayout(layout);
+    m_gview->centerOn(m_pix_item);
 }
 
 void

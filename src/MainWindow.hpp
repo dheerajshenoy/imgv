@@ -6,6 +6,9 @@
 #include <QTabWidget>
 #include <QWidget>
 #include "Panel.hpp"
+#include "argparse.hpp"
+
+#define __IMGV_VERSION "0.1.0"
 
 class ImageView;
 
@@ -14,10 +17,12 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
 
+    void construct() noexcept;
+    void readArgs(argparse::ArgumentParser &parser) noexcept;
     void initKeybinds() noexcept;
     void initConnections() noexcept;
 
-    void OpenFile() noexcept;
+    void OpenFile(QString filepath = QString()) noexcept;
     void CloseFile() noexcept;
     void ZoomIn() noexcept;
     void ZoomOut() noexcept;
@@ -30,4 +35,5 @@ private:
     ImageView *m_imgv{nullptr};
     QMap<QString, std::function<void()>> m_commandMap;
     QMap<QString, QString> m_shortcutMap;
+    float m_dpr{1.0f};
 };
