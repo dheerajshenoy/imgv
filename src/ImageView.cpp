@@ -44,32 +44,21 @@ ImageView::magickImageToQImage(const std::string &file) noexcept
     int width  = image.columns();
     int height = image.rows();
 
-    int size = width * height;
-    std::string format;
-    QImage::Format img_format;
+    const bool hasAlpha = image.alpha();
+    const std::string format = hasAlpha ? "RGBA" : "RGB";
+    const QImage::Format imgFormat = hasAlpha ? QImage::Format_RGBA8888 : QImage::Format_RGB888;
 
-    if (image.alpha())
-    {
-        size *= 4;
-        format     = "RGBA";
-        img_format = QImage::Format_RGBA8888;
-    }
-    else
-    {
-        size *= 3;
-        format     = "RGB";
-        img_format = QImage::Format_RGB888;
-    }
-    std::vector<unsigned char> pixels(size);
+    const int bytesPerPixel = hasAlpha ? 4 : 3;
+    std::vector<unsigned char> buffer(width * height * bytesPerPixel);
 
-    // Export RGBA pixels to buffer
-    image.write(0, 0, width, height, format, Magick::CharPixel, pixels.data());
 
-    QImage img(pixels.data(), width, height, img_format);
+    QImage img(width, height, imgFormat);
+    image.write(0, 0, width, height, format, Magick::CharPixel, img.bits());
+
     img.setDevicePixelRatio(m_dpr);
 
     // Copy to detach from original buffer (Magick might reuse or destroy it)
-    return img.copy();
+    return img;
 }
 
 void

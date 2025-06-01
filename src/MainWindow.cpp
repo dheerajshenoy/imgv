@@ -7,6 +7,7 @@
 #include <QScreen>
 #include <QShortcut>
 #include <QWindow>
+#include <qnamespace.h>
 #include <qshortcut.h>
 
 void
@@ -40,6 +41,9 @@ MainWindow::construct() noexcept
     setCentralWidget(widget);
     m_tab_widget->setTabsClosable(true);
     m_tab_widget->setTabBarAutoHide(true);
+    m_tab_widget->setDocumentMode(true);
+    // m_tab_widget->setTabPosition(QTabWidget::TabPosition::West);
+    m_tab_widget->setElideMode(Qt::TextElideMode::ElideMiddle);
 
     initConnections();
     initKeybinds();
