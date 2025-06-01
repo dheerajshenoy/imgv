@@ -30,15 +30,10 @@ ImageView::openFile(const QString &filepath) noexcept
             });
 
     render();
-    // m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
-    // m_gview->centerOn(m_pix_item);
 
+    m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
+    m_gview->centerOn(m_pix_item);
 
-    // Defer fit/center to after layout and rendering
-    QTimer::singleShot(0, this, [this]() {
-            m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
-            m_gview->centerOn(m_pix_item);
-            });
 }
 
 QImage
@@ -84,6 +79,11 @@ ImageView::render() noexcept
     m_pix      = QPixmap::fromImage(img);
     m_pix.setDevicePixelRatio(m_dpr);
     m_pix_item->setPixmap(m_pix);
+
+    auto bounds = m_pix_item->boundingRect();
+    int margin = 100;
+    QRectF padded = bounds.adjusted(-margin, -margin, margin, margin);
+    m_gview->setSceneRect(padded);
 }
 
 void
