@@ -6,11 +6,12 @@
 #include <ImageMagick-7/Magick++.h>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
+#include <QMovie>
 #include <QObject>
 #include <QScrollBar>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QMovie>
+#include <QFileInfo>
 
 class ImageView : public QWidget
 {
@@ -45,6 +46,10 @@ public:
     {
         return m_filesize;
     }
+    inline QString fileDir() noexcept
+    {
+        return QFileInfo(m_filepath).absolutePath();
+    }
 
 protected:
     void showEvent(QShowEvent *e) override;
@@ -52,11 +57,12 @@ protected:
 
 private:
     void render() noexcept;
-    void renderGif() noexcept;
+    void renderAnimatedImage() noexcept;
     QString humanReadableSize(qint64 bytes) noexcept;
     void updateGifFrame(int frameNumber) noexcept;
     void stopGifAnimation() noexcept;
     void startGifAnimation() noexcept;
+    bool hasMoreThanOneFrame() noexcept;
 
     bool m_isGif{false};
 

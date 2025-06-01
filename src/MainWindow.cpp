@@ -9,6 +9,8 @@
 #include <QWindow>
 #include <qnamespace.h>
 #include <qshortcut.h>
+#include <QTabBar>
+#include <QDesktopServices>
 
 void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
@@ -27,6 +29,7 @@ MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setAttribute(Qt::WA_NativeWindow);
+    Magick::InitializeMagick(nullptr);
 }
 
 void
@@ -67,6 +70,18 @@ MainWindow::initKeybinds() noexcept
     m_commandMap["close_file"] = [this]()
     {
         CloseFile();
+    };
+
+    m_commandMap["toggle_tabs"] = [this]()
+    {
+        auto tabbar = m_tab_widget->tabBar();
+        tabbar->setVisible(!tabbar->isVisible());
+    };
+
+    m_commandMap["open_file_location"] = [this]()
+    {
+        QString filedir = qobject_cast<ImageView*>(m_tab_widget->currentWidget())->fileDir();
+        QDesktopServices::openUrl(QUrl(filedir));
     };
 
     m_commandMap["zoom_in"] = [this]()
@@ -116,6 +131,7 @@ MainWindow::initKeybinds() noexcept
 
     m_shortcutMap["Ctrl+W"] = "close_file";
     m_shortcutMap["o"] = "open_file";
+    m_shortcutMap["q"] = "open_file_location";
     m_shortcutMap["="] = "zoom_in";
     m_shortcutMap["-"] = "zoom_out";
     m_shortcutMap[">"] = "rotate_clock";
@@ -126,6 +142,7 @@ MainWindow::initKeybinds() noexcept
     m_shortcutMap["j"] = "scroll_down";
     m_shortcutMap["k"] = "scroll_up";
     m_shortcutMap["l"] = "scroll_right";
+    m_shortcutMap["t"] = "toggle_tabs";
 
     for (auto iter = m_shortcutMap.begin(); iter != m_shortcutMap.end(); iter++)
     {

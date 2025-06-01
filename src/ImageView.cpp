@@ -66,8 +66,8 @@ ImageView::render() noexcept
     Magick::Image image;
     image.read(m_filepath.toStdString());
 
-    if (image.magick() == "GIF")
-        renderGif();
+    if (hasMoreThanOneFrame())
+        renderAnimatedImage();
     else
     {
         QImage img = magickImageToQImage(image);
@@ -75,12 +75,10 @@ ImageView::render() noexcept
         m_pix.setDevicePixelRatio(m_dpr);
         m_pix_item->setPixmap(m_pix);
 
-        auto bounds   = m_pix_item->boundingRect();
         int margin    = 100;
-        QRectF padded = bounds.adjusted(-margin, -margin, margin, margin);
+        QRectF padded = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
         m_gview->setSceneRect(padded);
     }
-
 }
 
 void
@@ -197,7 +195,7 @@ ImageView::humanReadableSize(qint64 bytes) noexcept
 }
 
 void
-ImageView::renderGif() noexcept
+ImageView::renderAnimatedImage() noexcept
 {
     if (m_movie)
     {
@@ -220,22 +218,27 @@ ImageView::updateGifFrame(int /*frameNumber*/) noexcept
 
     QPixmap frame = m_movie->currentPixmap();
     m_pix_item->setPixmap(frame);
-    m_gscene->setSceneRect(m_pix_item->boundingRect());
+    int margin        = 100;
+    QRectF paddedRect = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
+    m_gscene->setSceneRect(paddedRect);
 }
 
-void ImageView::stopGifAnimation() noexcept
+void
+ImageView::stopGifAnimation() noexcept
 {
     if (m_movie)
         m_movie->stop();
 }
 
-void ImageView::startGifAnimation() noexcept
+void
+ImageView::startGifAnimation() noexcept
 {
     if (m_movie)
         m_movie->start();
 }
 
-void ImageView::showEvent(QShowEvent *e)
+void
+ImageView::showEvent(QShowEvent *e)
 {
     if (m_isGif)
     {
@@ -245,11 +248,28 @@ void ImageView::showEvent(QShowEvent *e)
     QWidget::showEvent(e);
 }
 
-void ImageView::hideEvent(QHideEvent *e)
+void
+ImageView::hideEvent(QHideEvent *e)
 {
     if (m_isGif)
     {
         stopGifAnimation();
     }
     QWidget::hideEvent(e);
+}
+
+bool
+ImageView::hasMoreThanOneFrame() noexcept
+{
+    std::list<Magick::Image> frames;
+
+    try
+    {
+        Magick::pingImages(&frames, m_filepath.toStdString());
+        return frames.size() > 1;
+    }
+    catch (const Magick::Exception &error)
+    {
+        return false;
+    }
 }
