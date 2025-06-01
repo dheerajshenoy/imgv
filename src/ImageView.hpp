@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GraphicsView.hpp"
-#include "Minimap.hpp"
 
 #include <ImageMagick-7/Magick++.h>
 #include <QGraphicsPixmapItem>
@@ -76,6 +75,5 @@ private:
     int m_rotation{0};
     QPixmap m_pix;
     QScrollBar *m_vscrollbar, *m_hscrollbar;
-    Minimap *m_minimap;
     QMovie *m_movie{nullptr};
 };

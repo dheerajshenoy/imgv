@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Minimap.hpp"
-
 #include <QGraphicsView>
 #include <QWheelEvent>
 
