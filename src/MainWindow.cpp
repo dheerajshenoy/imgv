@@ -1,13 +1,16 @@
 #include "MainWindow.hpp"
-#include "ImageView.hpp"
-#include <QFileDialog>
-#include <QShortcut>
-#include <QKeySequence>
-#include <qshortcut.h>
-#include <QWindow>
-#include <QScreen>
 
-void MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
+#include "ImageView.hpp"
+
+#include <QFileDialog>
+#include <QKeySequence>
+#include <QScreen>
+#include <QShortcut>
+#include <QWindow>
+#include <qshortcut.h>
+
+void
+MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 {
     this->construct();
     if (parser.is_used("files"))
@@ -25,7 +28,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setAttribute(Qt::WA_NativeWindow);
 }
 
-void MainWindow::construct() noexcept
+void
+MainWindow::construct() noexcept
 {
     QVBoxLayout *layout = new QVBoxLayout();
 
@@ -34,26 +38,90 @@ void MainWindow::construct() noexcept
     QWidget *widget = new QWidget();
     widget->setLayout(layout);
     setCentralWidget(widget);
+    m_tab_widget->setTabsClosable(true);
+    m_tab_widget->setTabBarAutoHide(true);
 
     initConnections();
     initKeybinds();
     show();
+
+    this->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(0, 0, 0, 0);
+    widget->setContentsMargins(0, 0, 0, 0);
+    m_panel->setContentsMargins(0, 0, 0, 0);
+    m_panel->layout()->setContentsMargins(0, 5, 0, 5);
 }
 
-void MainWindow::initKeybinds() noexcept
+void
+MainWindow::initKeybinds() noexcept
 {
-    m_commandMap["open"] = [this]() { OpenFile(); };
-    m_commandMap["zoom_in"] = [this]() { ZoomIn(); };
-    m_commandMap["zoom_out"] = [this]() { ZoomOut(); };
-    m_commandMap["rotate_clock"] = [this]() { RotateClock(); };
-    m_commandMap["rotate_anticlock"] = [this]() { RotateAnticlock(); };
+    m_commandMap["open_file"] = [this]()
+    {
+        OpenFile();
+    };
 
-    m_shortcutMap["o"] = "open";
+    m_commandMap["close_file"] = [this]()
+    {
+        CloseFile();
+    };
+
+    m_commandMap["zoom_in"] = [this]()
+    {
+        ZoomIn();
+    };
+    m_commandMap["zoom_out"] = [this]()
+    {
+        ZoomOut();
+    };
+    m_commandMap["rotate_clock"] = [this]()
+    {
+        RotateClock();
+    };
+    m_commandMap["rotate_anticlock"] = [this]()
+    {
+        RotateAnticlock();
+    };
+    m_commandMap["fit_width"] = [this]()
+    {
+        FitWidth();
+    };
+    m_commandMap["fit_height"] = [this]()
+    {
+        FitHeight();
+    };
+
+    m_commandMap["scroll_left"] = [this]()
+    {
+        Scroll(ScrollDirection::LEFT);
+    };
+
+    m_commandMap["scroll_down"] = [this]()
+    {
+        Scroll(ScrollDirection::DOWN);
+    };
+
+    m_commandMap["scroll_up"] = [this]()
+    {
+        Scroll(ScrollDirection::UP);
+    };
+
+    m_commandMap["scroll_right"] = [this]()
+    {
+        Scroll(ScrollDirection::RIGHT);
+    };
+
+    m_shortcutMap["Ctrl+W"] = "close_file";
+    m_shortcutMap["o"] = "open_file";
     m_shortcutMap["="] = "zoom_in";
     m_shortcutMap["-"] = "zoom_out";
     m_shortcutMap[">"] = "rotate_clock";
     m_shortcutMap["<"] = "rotate_anticlock";
-
+    m_shortcutMap["1"] = "fit_width";
+    m_shortcutMap["2"] = "fit_height";
+    m_shortcutMap["h"] = "scroll_left";
+    m_shortcutMap["j"] = "scroll_down";
+    m_shortcutMap["k"] = "scroll_up";
+    m_shortcutMap["l"] = "scroll_right";
 
     for (auto iter = m_shortcutMap.begin(); iter != m_shortcutMap.end(); iter++)
     {
@@ -62,20 +130,44 @@ void MainWindow::initKeybinds() noexcept
     }
 }
 
-void MainWindow::initConnections() noexcept
+void
+MainWindow::initConnections() noexcept
 {
     QWindow *win = this->windowHandle();
     if (win)
     {
-        connect(win, &QWindow::screenChanged, this, [&](QScreen *screen) {
-                m_dpr = this->devicePixelRatioF();
-                if (m_imgv)
-                    m_imgv->setDPR(m_dpr);
-                });
+        connect(win, &QWindow::screenChanged, this, [&](QScreen *screen)
+        {
+            m_dpr = this->devicePixelRatioF();
+            if (m_imgv)
+                m_imgv->setDPR(m_dpr);
+        });
     }
+
+    connect(m_tab_widget, &QTabWidget::currentChanged, [&](int index) {
+            m_imgv = qobject_cast<ImageView*>(m_tab_widget->widget(index));
+            if (m_imgv)
+            {
+            m_panel->setFileName(m_imgv->fileName());
+            m_panel->setFileSize(m_imgv->fileSize());
+            }
+            });
+
+    connect(m_tab_widget, &QTabWidget::tabCloseRequested, this, &MainWindow::handleTabClose);
 }
 
-void MainWindow::OpenFile(QString filepath) noexcept
+void MainWindow::handleTabClose(int index) noexcept
+{
+    auto widget = m_tab_widget->widget(index);
+    if (!widget)
+        return;
+    widget->close();
+    widget->deleteLater();
+    m_tab_widget->removeTab(index);
+}
+
+void
+MainWindow::OpenFile(QString filepath) noexcept
 {
     if (filepath.isEmpty())
     {
@@ -85,41 +177,82 @@ void MainWindow::OpenFile(QString filepath) noexcept
     }
 
     filepath = filepath.replace("~", getenv("HOME"));
-    qDebug() << filepath;
 
     m_imgv = new ImageView(m_tab_widget);
     m_imgv->openFile(filepath);
     m_tab_widget->addTab(m_imgv, filepath);
+
+    m_tab_widget->setCurrentWidget(m_imgv);  // Make it the active tab
 }
 
-void MainWindow::ZoomIn() noexcept
+void
+MainWindow::CloseFile() noexcept
 {
-    if (m_imgv)
-    {
-        m_imgv->zoomIn();
-    }
+    if (m_tab_widget->currentIndex() >= 0)
+        m_tab_widget->tabCloseRequested(m_tab_widget->currentIndex());  // Make it the active tab
 }
 
-void MainWindow::ZoomOut() noexcept
+void
+MainWindow::ZoomIn() noexcept
+{
+    m_imgv->zoomIn();
+}
+
+void
+MainWindow::ZoomOut() noexcept
 {
     if (m_imgv)
-    {
         m_imgv->zoomOut();
-    }
 }
 
-void MainWindow::RotateClock() noexcept
+void
+MainWindow::RotateClock() noexcept
 {
     if (m_imgv)
-    {
         m_imgv->rotateClock();
-    }
+
 }
 
-void MainWindow::RotateAnticlock() noexcept
+void
+MainWindow::RotateAnticlock() noexcept
 {
     if (m_imgv)
-    {
         m_imgv->rotateAnticlock();
+}
+
+void
+MainWindow::FitHeight() noexcept
+{
+    if (m_imgv)
+        m_imgv->fitHeight();
+}
+
+void
+MainWindow::FitWidth() noexcept
+{
+    if (m_imgv)
+        m_imgv->fitWidth();
+}
+
+void
+MainWindow::Scroll(ScrollDirection dir) noexcept
+{
+    switch (dir)
+    {
+        case ScrollDirection::LEFT:
+            m_imgv->scrollLeft();
+            break;
+
+        case ScrollDirection::RIGHT:
+            m_imgv->scrollRight();
+            break;
+
+        case ScrollDirection::UP:
+            m_imgv->scrollUp();
+            break;
+
+        case ScrollDirection::DOWN:
+            m_imgv->scrollDown();
+            break;
     }
 }

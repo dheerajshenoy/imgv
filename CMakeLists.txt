@@ -30,6 +30,9 @@ add_executable(${PROJECT_NAME}
     src/ImageView.cpp
     src/MainWindow.cpp
     src/Panel.cpp
+    src/Minimap.cpp
+    src/MinimapRect.cpp
+    src/GraphicsView.cpp
 )
 
 include_directories(${ImageMagick_INCLUDE_DIRS})
