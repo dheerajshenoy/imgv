@@ -42,10 +42,16 @@ MainWindow::construct() noexcept
     QWidget *widget = new QWidget();
     widget->setLayout(layout);
     setCentralWidget(widget);
+    m_tab_widget->setStyleSheet(R"(
+    QTabbar::pane {
+    padding: 0px;
+    margin: 0px;
+    }
+    )");
     m_tab_widget->setTabsClosable(true);
     m_tab_widget->setTabBarAutoHide(true);
     m_tab_widget->setDocumentMode(true);
-    // m_tab_widget->setTabPosition(QTabWidget::TabPosition::West);
+    m_tab_widget->setMovable(true);
     m_tab_widget->setElideMode(Qt::TextElideMode::ElideMiddle);
 
     initConnections();
@@ -56,7 +62,7 @@ MainWindow::construct() noexcept
     layout->setContentsMargins(0, 0, 0, 0);
     widget->setContentsMargins(0, 0, 0, 0);
     m_panel->setContentsMargins(0, 0, 0, 0);
-    m_panel->layout()->setContentsMargins(0, 5, 0, 5);
+    m_panel->layout()->setContentsMargins(5, 0, 5, 0);
 }
 
 void
@@ -169,8 +175,10 @@ MainWindow::initConnections() noexcept
             m_imgv = qobject_cast<ImageView*>(m_tab_widget->widget(index));
             if (m_imgv)
             {
-            m_panel->setFileName(m_imgv->fileName());
+            auto filepath = m_imgv->filePath();
+            m_panel->setFileName(filepath);
             m_panel->setFileSize(m_imgv->fileSize());
+            this->setWindowTitle(QString("imgv: %1").arg(filepath));
             }
             });
 

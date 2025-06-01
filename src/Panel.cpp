@@ -10,7 +10,7 @@ Panel::Panel(QWidget *parent) : QWidget(parent)
 
 void Panel::setFileName(const QString &name) noexcept
 {
-    m_filename_label->setText(name);
+    m_filename_label->setFullText(name);
 }
 
 void Panel::setFileSize(const QString &size) noexcept

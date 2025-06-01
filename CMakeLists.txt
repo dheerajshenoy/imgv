@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
     src/MainWindow.cpp
     src/Panel.cpp
     src/GraphicsView.cpp
+    src/ElidableLabel.hpp
 )
 
 include_directories(${MAGICKPP_INCLUDE_DIRS})

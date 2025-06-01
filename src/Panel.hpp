@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QWidget>
+#include "ElidableLabel.hpp"
 
 class Panel : public QWidget
 {
@@ -12,6 +13,6 @@ public:
     void setFileSize(const QString &size) noexcept;
 
 private:
-    QLabel *m_filename_label{new QLabel("FILENAME")};
-    QLabel *m_filesize_label{new QLabel("FILESIZE")};
+    ElidableLabel *m_filename_label{new ElidableLabel()};
+    QLabel *m_filesize_label{new QLabel()};
 };
