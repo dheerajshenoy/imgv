@@ -207,7 +207,12 @@ MainWindow::OpenFile(QString filepath) noexcept
 {
     if (filepath.isEmpty())
     {
-        filepath = QFileDialog::getOpenFileName(this, "Open File");
+        filepath = QFileDialog::getOpenFileName(this, "Open File", QString(),
+                    "Image Files (*.bmp *.cgm *.dpx *.emf *.exr *.fits *.gif *.heic *.heif "
+                    "*.jp2 *.jpeg *.jxl *.pcx *.png *.psd *.sgi *.svg *.tga *.tiff "
+                    "*.ico *.webp *.wmf *.xbm *.cr2 *.crw *.dds *.eps *.raf *.jng *.dcr *.mrw "
+                    "*.nef *.orf *.pef *.pict *.pnm *.pbm *.pgm *.ppm *.rgb *.arw *.srf *.sr2 "
+                    "*.xcf *.xpm);;All Files (*)");
         if (filepath.isEmpty())
             return;
     }
