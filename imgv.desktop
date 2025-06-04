@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=MyImageViewer
-Comment=A fast Qt-based image viewer
-Exec=/full/path/to/myimageviewer %F
-Icon=myimageviewer
+Name=imgv
+Comment=Fast and Minimal Image Viewer
+Exec=imgv %F
+# Icon=imgv TODO:
 Terminal=false
 Type=Application
 Categories=Graphics;Viewer;
