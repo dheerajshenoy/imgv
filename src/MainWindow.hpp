@@ -2,6 +2,7 @@
 
 #include "Panel.hpp"
 #include "argparse.hpp"
+#include "TabWidget.hpp"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -30,6 +31,7 @@ public:
     void readArgs(argparse::ArgumentParser &parser) noexcept;
     void initKeybinds() noexcept;
     void initConnections() noexcept;
+    void handleFileDrop() noexcept;
 
     void OpenFile(QString filepath = QString()) noexcept;
     void CloseFile() noexcept;
@@ -44,7 +46,7 @@ public:
 private:
     void handleTabClose(int index) noexcept;
 
-    QTabWidget *m_tab_widget{new QTabWidget()};
+    TabWidget *m_tab_widget{new TabWidget()};
     Panel *m_panel{new Panel()};
     ImageView *m_imgv{nullptr};
     QMap<QString, std::function<void()>> m_commandMap;

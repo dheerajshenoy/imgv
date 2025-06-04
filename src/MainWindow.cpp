@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setAttribute(Qt::WA_NativeWindow);
     Magick::InitializeMagick(nullptr);
+    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 }
 
 void
@@ -42,17 +43,6 @@ MainWindow::construct() noexcept
     QWidget *widget = new QWidget();
     widget->setLayout(layout);
     setCentralWidget(widget);
-    m_tab_widget->setStyleSheet(R"(
-    QTabbar::pane {
-    padding: 0px;
-    margin: 0px;
-    }
-    )");
-    m_tab_widget->setTabsClosable(true);
-    m_tab_widget->setTabBarAutoHide(true);
-    m_tab_widget->setDocumentMode(true);
-    m_tab_widget->setMovable(true);
-    m_tab_widget->setElideMode(Qt::TextElideMode::ElideMiddle);
 
     initConnections();
     initKeybinds();
@@ -161,6 +151,8 @@ void
 MainWindow::initConnections() noexcept
 {
     QWindow *win = this->windowHandle();
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Unset);
+    m_dpr = this->devicePixelRatioF();
     if (win)
     {
         connect(win, &QWindow::screenChanged, this, [&](QScreen *screen)
@@ -183,6 +175,7 @@ MainWindow::initConnections() noexcept
             });
 
     connect(m_tab_widget, &QTabWidget::tabCloseRequested, this, &MainWindow::handleTabClose);
+
 }
 
 void MainWindow::handleTabClose(int index) noexcept
@@ -284,4 +277,9 @@ MainWindow::Scroll(ScrollDirection dir) noexcept
             m_imgv->scrollDown();
             break;
     }
+}
+
+void MainWindow::handleFileDrop() noexcept
+{
+
 }
