@@ -1,4 +1,5 @@
 #include "ImageView.hpp"
+#include "GraphicsView.hpp"
 
 #include <QFileInfo>
 #include <QGraphicsProxyWidget>
@@ -34,6 +35,9 @@ ImageView::ImageView(QWidget *parent) : QWidget(parent)
     connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) {
             updateMinimapRegion();
             });
+
+    connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
+
 }
 
 void
@@ -241,6 +245,7 @@ ImageView::updateGifFrame(int /*frameNumber*/) noexcept
 
     QPixmap frame = m_movie->currentPixmap();
     m_pix_item->setPixmap(frame);
+    m_minimap->setPixmap(frame);
     int margin        = 100;
     QRectF paddedRect = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
     m_gscene->setSceneRect(paddedRect);
@@ -314,4 +319,28 @@ void ImageView::resizeEvent(QResizeEvent *e)
 {
     updateMinimapPosition();
     QWidget::resizeEvent(e);
+}
+
+void
+ImageView::dropEvent(QDropEvent *e)
+{
+    if (e->mimeData()->hasUrls())
+    {
+        QList<QString> files;
+        for (const auto &url : e->mimeData()->urls())
+        {
+            auto file = url.toLocalFile();
+            files.append(file);
+        }
+        emit openFilesRequested(files);
+    }
+}
+
+void
+ImageView::dragEnterEvent(QDragEnterEvent *e)
+{
+    if (e->mimeData()->hasUrls() || e->mimeData()->hasText())
+        e->acceptProposedAction();
+    else
+        e->ignore();
 }

@@ -3,6 +3,9 @@
 #include "GraphicsView.hpp"
 #include "Minimap.hpp"
 
+#include <QMimeData>
+#include <QDropEvent>
+#include <QDragEnterEvent>
 #include <ImageMagick-7/Magick++.h>
 #include <QFileInfo>
 #include <QGraphicsPixmapItem>
@@ -58,10 +61,15 @@ public:
 
     void updateMinimapPosition() noexcept;
 
+signals:
+    void openFilesRequested(const QList<QString> &files);
+
 protected:
     void showEvent(QShowEvent *e) override;
     void hideEvent(QHideEvent *e) override;
     void resizeEvent(QResizeEvent *e) override;
+    void dragEnterEvent(QDragEnterEvent *e) override;
+    void dropEvent(QDropEvent *e) override;
 
 private:
     void render() noexcept;

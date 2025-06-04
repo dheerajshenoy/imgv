@@ -199,15 +199,7 @@ void MainWindow::handleTabClose(int index) noexcept
 void MainWindow::OpenFiles(const QList<QString> &files) noexcept
 {
     for (auto filepath : files)
-    {
-        filepath = filepath.replace("~", getenv("HOME"));
-
-        m_imgv = new ImageView(m_tab_widget);
-        m_imgv->openFile(filepath);
-        m_tab_widget->addTab(m_imgv, filepath);
-
-        m_tab_widget->setCurrentWidget(m_imgv);  // Make it the active tab
-    }
+        OpenFile(filepath);
 }
 
 void
@@ -225,8 +217,8 @@ MainWindow::OpenFile(QString filepath) noexcept
     m_imgv = new ImageView(m_tab_widget);
     m_imgv->openFile(filepath);
     m_tab_widget->addTab(m_imgv, filepath);
-
     m_tab_widget->setCurrentWidget(m_imgv);  // Make it the active tab
+    connect(m_imgv, &ImageView::openFilesRequested, this, &MainWindow::OpenFiles);
 }
 
 void
@@ -309,4 +301,30 @@ void MainWindow::handleFileDrop() noexcept
 void MainWindow::ToggleMinimap() noexcept
 {
     m_imgv->toggleMinimap();
+}
+
+
+void
+MainWindow::dropEvent(QDropEvent *e)
+{
+    qDebug() << "DD";
+    if (e->mimeData()->hasUrls())
+    {
+        QList<QString> files;
+        for (const auto &url : e->mimeData()->urls())
+        {
+            auto file = url.toLocalFile();
+            files.append(file);
+        }
+        OpenFiles(files);
+    }
+}
+
+void
+MainWindow::dragEnterEvent(QDragEnterEvent *e)
+{
+    if (e->mimeData()->hasUrls() || e->mimeData()->hasText())
+        e->acceptProposedAction();
+    else
+        e->ignore();
 }

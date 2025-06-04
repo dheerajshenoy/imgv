@@ -4,6 +4,8 @@
 #include "argparse.hpp"
 #include "TabWidget.hpp"
 
+#include <QMimeData>
+#include <qevent.h>
 #include <QApplication>
 #include <QMainWindow>
 #include <QTabWidget>
@@ -44,6 +46,10 @@ public:
     void FitHeight() noexcept;
     void Scroll(ScrollDirection dir) noexcept;
     void ToggleMinimap() noexcept;
+
+protected:
+    void dragEnterEvent(QDragEnterEvent *e) override;
+    void dropEvent(QDropEvent *e) override;
 
 private:
     void handleTabClose(int index) noexcept;

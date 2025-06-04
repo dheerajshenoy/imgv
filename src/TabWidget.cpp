@@ -19,27 +19,3 @@ TabWidget::TabWidget(QWidget *parent) : QTabWidget(parent)
     setAcceptDrops(true);
 }
 
-void
-TabWidget::dropEvent(QDropEvent *e)
-{
-    if (e->mimeData()->hasUrls() || e->mimeData()->hasText())
-        e->acceptProposedAction();
-    else
-        e->ignore();
-}
-
-void
-TabWidget::dragEnterEvent(QDragEnterEvent *e)
-{
-    if (e->mimeData()->hasUrls())
-    {
-        QList<QString> files;
-        for(const auto &url : e->mimeData()->urls())
-        {
-            auto file = url.toLocalFile();
-            files.append(file);
-        }
-        emit fileOpenRequested(files);
-    }
-
-}

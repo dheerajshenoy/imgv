@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QTabWidget>
-#include <qevent.h>
 
 class TabWidget : public QTabWidget
 {
@@ -11,10 +10,4 @@ public:
 
 signals:
     void fileOpenRequested(const QList<QString> &filepaths);
-
-protected:
-    void dragEnterEvent(QDragEnterEvent *e) override;
-    void dropEvent(QDropEvent *e) override;
-
-private:
 };

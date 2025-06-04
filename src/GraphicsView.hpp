@@ -2,9 +2,13 @@
 
 #include <QGraphicsView>
 #include <QWheelEvent>
+#include <QMimeData>
+#include <QDropEvent>
+#include <QDragEnterEvent>
 
 class GraphicsView : public QGraphicsView
 {
+    Q_OBJECT
 public:
     GraphicsView(QWidget *parent = nullptr);
     inline void setZoomFactor(float factor) noexcept
@@ -14,6 +18,9 @@ public:
 
     void zoomIn() noexcept;
     void zoomOut() noexcept;
+
+signals:
+    void openFilesRequested(const QList<QString> &files);
 
 protected:
     void wheelEvent(QWheelEvent *e) override;

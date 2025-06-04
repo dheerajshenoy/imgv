@@ -21,6 +21,8 @@ public:
         // scale(0.5, 0.5);
         m_overlay_rect->setPen(QPen(QColor(255, 0, 0, 100), 5));
         m_overlay_rect->setBrush(QBrush(QColor(255, 0, 0, 75)));
+        setFrameShadow(QGraphicsView::Plain);
+        setFrameShape(QGraphicsView::NoFrame);
         m_overlay_rect->setZValue(10);
 
         m_scene->addItem(m_pix_item);
