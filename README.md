@@ -61,6 +61,7 @@ imgv <path-to-files>
 | k         | Scroll Up           |
 | l         | Scroll Right        |
 | t         | Toggle Tabs         |
+| m         | Toggle Minimap      |
 
 ## TODO
 
