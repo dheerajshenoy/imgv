@@ -1,7 +1,10 @@
 #include "ImageView.hpp"
 
 #include <QFileInfo>
+#include <QGraphicsProxyWidget>
 #include <QtConcurrent/QtConcurrent>
+#include <qevent.h>
+#include <qscrollbar.h>
 #include <qthreadpool.h>
 
 ImageView::ImageView(QWidget *parent) : QWidget(parent)
@@ -12,11 +15,25 @@ ImageView::ImageView(QWidget *parent) : QWidget(parent)
     layout->addWidget(m_gview);
     m_gview->setScene(m_gscene);
     m_gscene->addItem(m_pix_item);
+
+    m_minimap = new Minimap(m_gview);
+    m_minimap->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+    m_minimap->raise();
+    m_minimap->setVisible(true);
+
     m_gview->setResizeAnchor(QGraphicsView::ViewportAnchor::AnchorUnderMouse);
     m_gview->setTransformationAnchor(QGraphicsView::ViewportAnchor::AnchorViewCenter);
     setLayout(layout);
     m_hscrollbar = m_gview->horizontalScrollBar();
     m_vscrollbar = m_gview->verticalScrollBar();
+    m_gview->installEventFilter(this);
+    connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) {
+            updateMinimapRegion();
+            });
+
+    connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) {
+            updateMinimapRegion();
+            });
 }
 
 void
@@ -34,6 +51,7 @@ ImageView::openFile(const QString &filepath) noexcept
     stopGifAnimation();
     render();
 
+    m_minimap->setPixmap(m_pix_item->pixmap());
     m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
     m_gview->centerOn(m_pix_item);
 }
@@ -85,12 +103,17 @@ void
 ImageView::zoomIn() noexcept
 {
     m_gview->zoomIn();
+
+    if (m_isMinimapMode)
+        updateMinimapRegion();
 }
 
 void
 ImageView::zoomOut() noexcept
 {
     m_gview->zoomOut();
+    if (m_isMinimapMode)
+        updateMinimapRegion();
 }
 
 void
@@ -272,4 +295,23 @@ ImageView::hasMoreThanOneFrame() noexcept
     {
         return false;
     }
+}
+
+void
+ImageView::updateMinimapRegion() noexcept
+{
+    QRectF rect = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
+    m_minimap->setOverlayRect(rect);
+}
+
+void ImageView::updateMinimapPosition() noexcept
+{
+    m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30,
+            m_gview->viewport()->height() - m_minimap->height() - 30);
+}
+
+void ImageView::resizeEvent(QResizeEvent *e)
+{
+    updateMinimapPosition();
+    QWidget::resizeEvent(e);
 }

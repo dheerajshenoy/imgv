@@ -17,3 +17,9 @@ void Panel::setFileSize(const QString &size) noexcept
 {
     m_filesize_label->setText(size);
 }
+
+void Panel::clear() noexcept
+{
+    m_filename_label->setFullText("");
+    m_filesize_label->clear();
+}

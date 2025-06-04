@@ -11,6 +11,7 @@ public:
     Panel(QWidget *parent = nullptr);
     void setFileName(const QString &name) noexcept;
     void setFileSize(const QString &size) noexcept;
+    void clear() noexcept;
 
 private:
     ElidableLabel *m_filename_label{new ElidableLabel()};

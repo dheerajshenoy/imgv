@@ -1,8 +1,10 @@
 #pragma once
 
 #include "GraphicsView.hpp"
+#include "Minimap.hpp"
 
 #include <ImageMagick-7/Magick++.h>
+#include <QFileInfo>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QMovie>
@@ -10,7 +12,6 @@
 #include <QScrollBar>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QFileInfo>
 
 class ImageView : public QWidget
 {
@@ -50,9 +51,17 @@ public:
         return QFileInfo(m_filepath).absolutePath();
     }
 
+    inline void toggleMinimap() noexcept
+    {
+        m_minimap->setVisible(!m_minimap->isVisible());
+    }
+
+    void updateMinimapPosition() noexcept;
+
 protected:
     void showEvent(QShowEvent *e) override;
     void hideEvent(QHideEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
 
 private:
     void render() noexcept;
@@ -62,8 +71,9 @@ private:
     void stopGifAnimation() noexcept;
     void startGifAnimation() noexcept;
     bool hasMoreThanOneFrame() noexcept;
+    void updateMinimapRegion() noexcept;
 
-    bool m_isGif{false};
+    bool m_isGif{false}, m_isMinimapMode{false};
 
     float m_dpr{1.0f};
     QImage magickImageToQImage(Magick::Image &image) noexcept;
@@ -76,4 +86,5 @@ private:
     QPixmap m_pix;
     QScrollBar *m_vscrollbar, *m_hscrollbar;
     QMovie *m_movie{nullptr};
+    Minimap *m_minimap{nullptr};
 };

@@ -39,5 +39,7 @@ TabWidget::dragEnterEvent(QDragEnterEvent *e)
             auto file = url.toLocalFile();
             files.append(file);
         }
+        emit fileOpenRequested(files);
     }
+
 }

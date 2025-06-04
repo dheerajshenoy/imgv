@@ -34,6 +34,7 @@ public:
     void handleFileDrop() noexcept;
 
     void OpenFile(QString filepath = QString()) noexcept;
+    void OpenFiles(const QList<QString> &files) noexcept;
     void CloseFile() noexcept;
     void ZoomIn() noexcept;
     void ZoomOut() noexcept;
@@ -42,6 +43,7 @@ public:
     void FitWidth() noexcept;
     void FitHeight() noexcept;
     void Scroll(ScrollDirection dir) noexcept;
+    void ToggleMinimap() noexcept;
 
 private:
     void handleTabClose(int index) noexcept;

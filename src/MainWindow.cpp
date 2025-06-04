@@ -125,6 +125,12 @@ MainWindow::initKeybinds() noexcept
         Scroll(ScrollDirection::RIGHT);
     };
 
+    m_commandMap["toggle_minimap"] = [this]()
+    {
+        ToggleMinimap();
+    };
+
+    m_shortcutMap["m"] = "toggle_minimap";
     m_shortcutMap["Ctrl+W"] = "close_file";
     m_shortcutMap["o"] = "open_file";
     m_shortcutMap["q"] = "open_file_location";
@@ -163,29 +169,45 @@ MainWindow::initConnections() noexcept
         });
     }
 
-    connect(m_tab_widget, &QTabWidget::currentChanged, [&](int index) {
+    connect(m_tab_widget, &TabWidget::currentChanged, [&](int index) {
             m_imgv = qobject_cast<ImageView*>(m_tab_widget->widget(index));
             if (m_imgv)
             {
             auto filepath = m_imgv->filePath();
             m_panel->setFileName(filepath);
             m_panel->setFileSize(m_imgv->fileSize());
+            m_imgv->updateMinimapPosition();
             this->setWindowTitle(QString("imgv: %1").arg(filepath));
             }
             });
 
-    connect(m_tab_widget, &QTabWidget::tabCloseRequested, this, &MainWindow::handleTabClose);
-
+    connect(m_tab_widget, &TabWidget::tabCloseRequested, this, &MainWindow::handleTabClose);
+    connect(m_tab_widget, &TabWidget::fileOpenRequested, this, &MainWindow::OpenFiles);
 }
 
 void MainWindow::handleTabClose(int index) noexcept
 {
+    m_panel->clear();
     auto widget = m_tab_widget->widget(index);
     if (!widget)
         return;
     widget->close();
     widget->deleteLater();
     m_tab_widget->removeTab(index);
+}
+
+void MainWindow::OpenFiles(const QList<QString> &files) noexcept
+{
+    for (auto filepath : files)
+    {
+        filepath = filepath.replace("~", getenv("HOME"));
+
+        m_imgv = new ImageView(m_tab_widget);
+        m_imgv->openFile(filepath);
+        m_tab_widget->addTab(m_imgv, filepath);
+
+        m_tab_widget->setCurrentWidget(m_imgv);  // Make it the active tab
+    }
 }
 
 void
@@ -282,4 +304,9 @@ MainWindow::Scroll(ScrollDirection dir) noexcept
 void MainWindow::handleFileDrop() noexcept
 {
 
+}
+
+void MainWindow::ToggleMinimap() noexcept
+{
+    m_imgv->toggleMinimap();
 }
