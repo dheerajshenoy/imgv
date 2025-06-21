@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/icons/dodo.svg</file>
+    </qresource>
+</RCC>
+
+<!-- vim: ft=xml -->

@@ -58,6 +58,6 @@ install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 install(FILES ${PROJECT_NAME}.desktop DESTINATION share/applications)
 
 # Install icons to correct freedesktop-compliant locations
-# install(DIRECTORY resources/hicolor
-#     DESTINATION share/icons
-#     FILES_MATCHING PATTERN "*.png")
+install(DIRECTORY resources/icons/hicolor
+    DESTINATION share/icons
+    FILES_MATCHING PATTERN "*.png")

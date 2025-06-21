@@ -2,7 +2,7 @@
 Name=imgv
 Comment=Fast and Minimal Image Viewer
 Exec=imgv %F
-# Icon=imgv TODO:
+Icon=imgv
 Terminal=false
 Type=Application
 Categories=Graphics;Viewer;
