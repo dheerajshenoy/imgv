@@ -12,7 +12,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#define __IMGV_VERSION "0.1.0"
+#define __IV_VERSION "0.1.0"
 
 class ImageView;
 

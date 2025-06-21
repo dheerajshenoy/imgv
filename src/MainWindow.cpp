@@ -178,7 +178,7 @@ MainWindow::initConnections() noexcept
             m_panel->setFileName(filepath);
             m_panel->setFileSize(m_imgv->fileSize());
             m_imgv->updateMinimapPosition();
-            this->setWindowTitle(QString("imgv: %1").arg(filepath));
+            this->setWindowTitle(QString("iv: %1").arg(filepath));
             }
             });
 

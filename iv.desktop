@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=imgv
+Name=iv
 Comment=Fast and Minimal Image Viewer
-Exec=imgv %F
-Icon=imgv
+Exec=iv %F
+Icon=iv
 Terminal=false
 Type=Application
 Categories=Graphics;Viewer;
