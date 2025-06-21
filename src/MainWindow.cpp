@@ -71,7 +71,7 @@ MainWindow::initKeybinds() noexcept
 
     m_commandMap["toggle_tabs"] = [this]()
     {
-        auto tabbar = m_tab_widget->tabBar();
+        QTabBar *tabbar = m_tab_widget->tabBar();
         tabbar->setVisible(!tabbar->isVisible());
     };
 
@@ -175,9 +175,10 @@ MainWindow::initConnections() noexcept
         m_imgv = qobject_cast<ImageView *>(m_tab_widget->widget(index));
         if (m_imgv)
         {
-            auto filepath = m_imgv->filePath();
+            QString filepath = m_imgv->filePath();
+            QSize size       = m_imgv->size();
             m_panel->setFileName(filepath);
-            m_panel->setImageSize(m_imgv->size());
+            m_panel->setImageSize(size.width(), size.height());
             m_panel->setFileSize(m_imgv->fileSize());
             m_imgv->updateMinimapPosition();
             this->setWindowTitle(QString("iv: %1").arg(filepath));
@@ -192,7 +193,7 @@ void
 MainWindow::handleTabClose(int index) noexcept
 {
     m_panel->clear();
-    auto widget = m_tab_widget->widget(index);
+    QWidget *widget = m_tab_widget->widget(index);
     if (!widget)
         return;
     widget->close();
@@ -332,9 +333,9 @@ MainWindow::dropEvent(QDropEvent *e)
     if (e->mimeData()->hasUrls())
     {
         QList<QString> files;
-        for (const auto &url : e->mimeData()->urls())
+        for (const QUrl &url : e->mimeData()->urls())
         {
-            auto file = url.toLocalFile();
+            QString file = url.toLocalFile();
             files.append(file);
         }
         OpenFiles(files);
