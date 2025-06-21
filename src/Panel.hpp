@@ -1,9 +1,10 @@
 #pragma once
 
+#include "ElidableLabel.hpp"
+
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QWidget>
-#include "ElidableLabel.hpp"
 
 class Panel : public QWidget
 {
@@ -11,9 +12,11 @@ public:
     Panel(QWidget *parent = nullptr);
     void setFileName(const QString &name) noexcept;
     void setFileSize(const QString &size) noexcept;
+    void setImageSize(const QSize &size) noexcept;
     void clear() noexcept;
 
 private:
-    ElidableLabel *m_filename_label{new ElidableLabel()};
-    QLabel *m_filesize_label{new QLabel()};
+    ElidableLabel *m_filename_label{nullptr};
+    QLabel *m_filesize_label{nullptr};
+    QLabel *m_imgsize_label{nullptr};
 };

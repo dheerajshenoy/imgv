@@ -3,13 +3,13 @@
 #include "GraphicsView.hpp"
 #include "Minimap.hpp"
 
-#include <QMimeData>
-#include <QDropEvent>
-#include <QDragEnterEvent>
 #include <ImageMagick-7/Magick++.h>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QFileInfo>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
+#include <QMimeData>
 #include <QMovie>
 #include <QObject>
 #include <QScrollBar>
@@ -29,6 +29,7 @@ public:
         render();
     }
 
+    QSize size() noexcept;
     void zoomIn() noexcept;
     void zoomOut() noexcept;
     void rotateClock() noexcept;

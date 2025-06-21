@@ -177,6 +177,7 @@ MainWindow::initConnections() noexcept
         {
             auto filepath = m_imgv->filePath();
             m_panel->setFileName(filepath);
+            m_panel->setImageSize(m_imgv->size());
             m_panel->setFileSize(m_imgv->fileSize());
             m_imgv->updateMinimapPosition();
             this->setWindowTitle(QString("iv: %1").arg(filepath));
@@ -213,13 +214,17 @@ MainWindow::OpenFile(const QString &filepath) noexcept
 
     if (fp.isEmpty())
     {
-        QStringList filepaths =
-            QFileDialog::getOpenFileNames(this, "Open File", QString(),
-                                          "Image Files (*.bmp *.cgm *.dpx *.emf *.exr *.fits *.gif *.heic *.heif "
-                                          "*.jp2 *.jpeg *.jxl *.pcx *.png *.psd *.sgi *.svg *.tga *.tiff "
-                                          "*.ico *.webp *.wmf *.xbm *.cr2 *.crw *.dds *.eps *.raf *.jng *.dcr *.mrw "
-                                          "*.nef *.orf *.pef *.pict *.pnm *.pbm *.pgm *.ppm *.rgb *.arw *.srf *.sr2 "
-                                          "*.xcf *.xpm);;All Files (*)");
+
+        QStringList extensions = {"*.jpg",  "*.bmp",  "*.cgm", "*.dpx",  "*.emf", "*.exr",  "*.fits", "*.gif",
+                                  "*.heic", "*.heif", "*.jp2", "*.jpeg", "*.jxl", "*.pcx",  "*.png",  "*.psd",
+                                  "*.sgi",  "*.svg",  "*.tga", "*.tiff", "*.ico", "*.webp", "*.wmf",  "*.xbm",
+                                  "*.cr2",  "*.crw",  "*.dds", "*.eps",  "*.raf", "*.jng",  "*.dcr",  "*.mrw",
+                                  "*.nef",  "*.orf",  "*.pef", "*.pict", "*.pnm", "*.pbm",  "*.pgm",  "*.ppm",
+                                  "*.rgb",  "*.arw",  "*.srf", "*.sr2",  "*.xcf", "*.xpm"};
+
+        QString filter = QString("Image Files (%1);;All Files (*)").arg(extensions.join(' '));
+
+        QStringList filepaths = QFileDialog::getOpenFileNames(this, "Open File", QString(), filter);
 
         if (filepaths.isEmpty())
             return;

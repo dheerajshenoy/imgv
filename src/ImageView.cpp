@@ -1,4 +1,5 @@
 #include "ImageView.hpp"
+
 #include "GraphicsView.hpp"
 
 #include <QFileInfo>
@@ -28,16 +29,11 @@ ImageView::ImageView(QWidget *parent) : QWidget(parent)
     m_hscrollbar = m_gview->horizontalScrollBar();
     m_vscrollbar = m_gview->verticalScrollBar();
     m_gview->installEventFilter(this);
-    connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) {
-            updateMinimapRegion();
-            });
+    connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
 
-    connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) {
-            updateMinimapRegion();
-            });
+    connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
 
     connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
-
 }
 
 void
@@ -305,17 +301,25 @@ ImageView::hasMoreThanOneFrame() noexcept
 void
 ImageView::updateMinimapRegion() noexcept
 {
-    QRectF rect = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
-    m_minimap->setOverlayRect(rect);
+    QRectF visible = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
+    QRectF image   = m_pix_item->sceneBoundingRect(); // Full image, in scene coords
+
+    bool fullyVisible = visible.contains(image);
+    m_minimap->setVisible(!fullyVisible);
+
+    if (!fullyVisible)
+        m_minimap->setOverlayRect(visible); // Pass in scene-space rect
 }
 
-void ImageView::updateMinimapPosition() noexcept
+void
+ImageView::updateMinimapPosition() noexcept
 {
     m_minimap->move(m_gview->viewport()->width() - m_minimap->width() - 30,
-            m_gview->viewport()->height() - m_minimap->height() - 30);
+                    m_gview->viewport()->height() - m_minimap->height() - 30);
 }
 
-void ImageView::resizeEvent(QResizeEvent *e)
+void
+ImageView::resizeEvent(QResizeEvent *e)
 {
     updateMinimapPosition();
     QWidget::resizeEvent(e);
@@ -343,4 +347,10 @@ ImageView::dragEnterEvent(QDragEnterEvent *e)
         e->acceptProposedAction();
     else
         e->ignore();
+}
+
+QSize
+ImageView::size() noexcept
+{
+    return m_pix_item->pixmap().size();
 }
