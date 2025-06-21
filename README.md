@@ -1,8 +1,5 @@
 <p align="center"><img src="resources/icons/hicolor/256x256/apps/iv.png"></p>
-
-# iv
-
-Minimal image viewer
+<p align="center">Minimal image viewer</p>
 
 # Table of Contents
 
