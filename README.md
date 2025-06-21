@@ -1,4 +1,7 @@
-# imgv
+<p align="center"><img src="resources/icons/hicolor/256x256/apps/iv.png"></p>
+
+# iv
+
 Minimal image viewer
 
 # Table of Contents
@@ -24,11 +27,11 @@ Minimal image viewer
     - ImageMagick
     - cmake & ninja (for building)
 
-2. Run the following commands to clone the repo and build imgv
+2. Run the following commands to clone the repo and build iv
 
 ```bash
-git clone github.com/dheerajshenoy/imgv
-cd imgv
+git clone github.com/dheerajshenoy/iv
+cd iv
 mkdir build && cd build
 cmake .. -G Ninja -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug
 ninja
@@ -40,7 +43,7 @@ sudo ninja install
 Open images
 
 ```bash
-imgv <path-to-files>
+iv <path-to-files>
 ```
 
 ## Default Keybindings
