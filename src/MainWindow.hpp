@@ -36,7 +36,8 @@ public:
     void handleFileDrop() noexcept;
 
     void OpenFile(const QString &filepath = QString()) noexcept;
-    void OpenFiles(const QList<QString> &files) noexcept;
+    void OpenFiles(const QStringList &files) noexcept;
+    void OpenFiles(const std::vector<std::string> &files) noexcept;
     void CloseFile() noexcept;
     void ZoomIn() noexcept;
     void ZoomOut() noexcept;
@@ -52,6 +53,8 @@ protected:
     void dropEvent(QDropEvent *e) override;
 
 private:
+    void updateFileinfoInPanel() noexcept;
+    QStringList openFileDialog() noexcept;
     void handleTabClose(int index) noexcept;
 
     TabWidget *m_tab_widget{new TabWidget()};

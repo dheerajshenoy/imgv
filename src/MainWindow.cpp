@@ -16,13 +16,11 @@ void
 MainWindow::readArgs(argparse::ArgumentParser &parser) noexcept
 {
     this->construct();
+
     if (parser.is_used("files"))
     {
         auto files = parser.get<std::vector<std::string>>("files");
-        for (const auto &file : files)
-        {
-            OpenFile(QString::fromStdString(file));
-        }
+        OpenFiles(files);
     }
 }
 
@@ -164,6 +162,7 @@ MainWindow::initConnections() noexcept
     {
         connect(win, &QWindow::screenChanged, this, [&](QScreen *screen)
         {
+            Q_UNUSED(screen);
             m_dpr = this->devicePixelRatioF();
             if (m_imgv)
                 m_imgv->setDPR(m_dpr);
@@ -173,20 +172,10 @@ MainWindow::initConnections() noexcept
     connect(m_tab_widget, &TabWidget::currentChanged, [&](int index)
     {
         m_imgv = qobject_cast<ImageView *>(m_tab_widget->widget(index));
-        if (m_imgv)
-        {
-            QString filepath = m_imgv->filePath();
-            QSize size       = m_imgv->size();
-            m_panel->setFileName(filepath);
-            m_panel->setImageSize(size.width(), size.height());
-            m_panel->setFileSize(m_imgv->fileSize());
-            m_imgv->updateMinimapPosition();
-            this->setWindowTitle(QString("iv: %1").arg(filepath));
-        }
+        updateFileinfoInPanel();
     });
 
     connect(m_tab_widget, &TabWidget::tabCloseRequested, this, &MainWindow::handleTabClose);
-    connect(m_tab_widget, &TabWidget::fileOpenRequested, this, &MainWindow::OpenFiles);
 }
 
 void
@@ -209,6 +198,13 @@ MainWindow::OpenFiles(const QList<QString> &files) noexcept
 }
 
 void
+MainWindow::OpenFiles(const std::vector<std::string> &files) noexcept
+{
+    for (const std::string &filepath : files)
+        OpenFile(QString::fromStdString(filepath));
+}
+
+void
 MainWindow::OpenFile(const QString &filepath) noexcept
 {
     QString fp = filepath;
@@ -216,16 +212,7 @@ MainWindow::OpenFile(const QString &filepath) noexcept
     if (fp.isEmpty())
     {
 
-        QStringList extensions = {"*.jpg",  "*.bmp",  "*.cgm", "*.dpx",  "*.emf", "*.exr",  "*.fits", "*.gif",
-                                  "*.heic", "*.heif", "*.jp2", "*.jpeg", "*.jxl", "*.pcx",  "*.png",  "*.psd",
-                                  "*.sgi",  "*.svg",  "*.tga", "*.tiff", "*.ico", "*.webp", "*.wmf",  "*.xbm",
-                                  "*.cr2",  "*.crw",  "*.dds", "*.eps",  "*.raf", "*.jng",  "*.dcr",  "*.mrw",
-                                  "*.nef",  "*.orf",  "*.pef", "*.pict", "*.pnm", "*.pbm",  "*.pgm",  "*.ppm",
-                                  "*.rgb",  "*.arw",  "*.srf", "*.sr2",  "*.xcf", "*.xpm"};
-
-        QString filter = QString("Image Files (%1);;All Files (*)").arg(extensions.join(' '));
-
-        QStringList filepaths = QFileDialog::getOpenFileNames(this, "Open File", QString(), filter);
+        QStringList filepaths = openFileDialog();
 
         if (filepaths.isEmpty())
             return;
@@ -241,7 +228,8 @@ MainWindow::OpenFile(const QString &filepath) noexcept
     m_imgv->openFile(filepath);
     m_tab_widget->addTab(m_imgv, fp);
     m_tab_widget->setCurrentWidget(m_imgv); // Make it the active tab
-    connect(m_imgv, &ImageView::openFilesRequested, this, &MainWindow::OpenFiles);
+    connect(m_imgv, &ImageView::openFilesRequested, this,
+            [&](const QStringList &files) { OpenFiles(files); }); // drop event
 }
 
 void
@@ -349,4 +337,33 @@ MainWindow::dragEnterEvent(QDragEnterEvent *e)
         e->acceptProposedAction();
     else
         e->ignore();
+}
+
+QStringList
+MainWindow::openFileDialog() noexcept
+{
+    QStringList extensions = {
+        "*.jpg", "*.bmp", "*.cgm", "*.dpx", "*.emf", "*.exr", "*.fits", "*.gif",  "*.heic", "*.heif", "*.jp2", "*.jpeg",
+        "*.jxl", "*.pcx", "*.png", "*.psd", "*.sgi", "*.svg", "*.tga",  "*.tiff", "*.ico",  "*.webp", "*.wmf", "*.xbm",
+        "*.cr2", "*.crw", "*.dds", "*.eps", "*.raf", "*.jng", "*.dcr",  "*.mrw",  "*.nef",  "*.orf",  "*.pef", "*.pict",
+        "*.pnm", "*.pbm", "*.pgm", "*.ppm", "*.rgb", "*.arw", "*.srf",  "*.sr2",  "*.xcf",  "*.xpm"};
+
+    QString filter = QString("Image Files (%1);;All Files (*)").arg(extensions.join(' '));
+
+    return QFileDialog::getOpenFileNames(this, "Open File", QString(), filter);
+}
+
+void
+MainWindow::updateFileinfoInPanel() noexcept
+{
+    if (!m_imgv)
+        return;
+
+    const QString &filepath = m_imgv->filePath();
+    const QSize &size       = m_imgv->size();
+    m_panel->setFileName(filepath);
+    m_panel->setImageSize(size.width(), size.height());
+    m_panel->setFileSize(m_imgv->fileSize());
+    m_imgv->updateMinimapPosition();
+    this->setWindowTitle(QString("iv: %1").arg(filepath));
 }

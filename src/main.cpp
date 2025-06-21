@@ -1,11 +1,6 @@
 #include "MainWindow.hpp"
 #include "argparse.hpp"
 
-argparse::ArgumentParser
-initArgs(int argc, char *argv[])
-{
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -14,7 +9,12 @@ main(int argc, char *argv[])
 
     argparse::ArgumentParser program("iv", __IV_VERSION);
     program.add_argument("files").remaining();
+
+    try {
     program.parse_args(argc, argv);
+    } catch (const std::exception &e) {
+        qDebug() << e.what();
+    }
 
     mw.readArgs(program);
     app.exec();

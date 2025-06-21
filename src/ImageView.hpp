@@ -61,7 +61,6 @@ public:
     }
 
     void updateMinimapPosition() noexcept;
-
 signals:
     void openFilesRequested(const QList<QString> &files);
 
