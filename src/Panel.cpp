@@ -28,10 +28,9 @@ Panel::setFileSize(const QString &size) noexcept
 }
 
 void
-Panel::setImageSize(const QSize &size) noexcept
+Panel::setImageSize(int width, int height) noexcept
 {
-    qDebug() << size;
-    QString sizelabel = QString("(W: %1, H: %2)").arg(size.width()).arg(size.height());
+    QString sizelabel = QString("(W: %1, H: %2)").arg(width).arg(height);
     m_imgsize_label->setText(sizelabel);
 }
 

@@ -12,7 +12,7 @@ public:
     Panel(QWidget *parent = nullptr);
     void setFileName(const QString &name) noexcept;
     void setFileSize(const QString &size) noexcept;
-    void setImageSize(const QSize &size) noexcept;
+    void setImageSize(int w, int h) noexcept;
     void clear() noexcept;
 
 private:
