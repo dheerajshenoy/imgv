@@ -36,12 +36,46 @@ public:
         fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
     }
 
-    void setOverlayRect(const QRectF &rect) noexcept
+    inline void setOverlayRect(const QRectF &rect) noexcept
     {
         m_overlay_rect->setRect(rect);
     }
 
+    inline void setOverlayRectColor(const QColor &color) noexcept
+    {
+        m_overlay_rect->setBrush(color);
+    }
+
+    inline bool forceHidden() noexcept
+    {
+        return m_force_hidden;
+    }
+
+    inline void setForceHidden(bool state) noexcept
+    {
+        m_force_hidden = state;
+        if (state)
+            setVisible(false);
+    }
+
+
+    inline void setOverlayRectBorderWidth(int width) noexcept
+    {
+        if (width < 0)
+            return;
+
+        QPen p = m_overlay_rect->pen();
+        p.setWidth(width);
+        m_overlay_rect->setPen(p);
+    }
+
+    inline void setOverlayRectBorderColor(const QColor &color) noexcept
+    {
+        m_overlay_rect->setPen(color);
+    }
+
 private:
+    bool m_force_hidden{false};
     QGraphicsPixmapItem *m_pix_item{new QGraphicsPixmapItem()};
     QGraphicsScene *m_scene{new QGraphicsScene(this)};
     QGraphicsRectItem *m_overlay_rect{new QGraphicsRectItem()};

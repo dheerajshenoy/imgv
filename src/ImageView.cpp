@@ -1,5 +1,4 @@
 #include "ImageView.hpp"
-
 #include "GraphicsView.hpp"
 
 #include <QFileInfo>
@@ -9,7 +8,7 @@
 #include <qscrollbar.h>
 #include <qthreadpool.h>
 
-ImageView::ImageView(QWidget *parent) : QWidget(parent)
+ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m_config(config)
 {
     QVBoxLayout *layout = new QVBoxLayout();
     m_gview             = new GraphicsView();
@@ -19,21 +18,37 @@ ImageView::ImageView(QWidget *parent) : QWidget(parent)
     m_gscene->addItem(m_pix_item);
 
     m_minimap = new Minimap(m_gview);
+    m_minimap->setOverlayRectColor(QColor::fromString(m_config.minimap_overlay_color));
+    m_minimap->setOverlayRectBorderWidth(m_config.minimap_overlay_border_width);
+    m_minimap->setOverlayRectBorderColor(QColor::fromString(m_config.minimap_overlay_border_color));
     m_minimap->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     m_minimap->raise();
-    m_minimap->setVisible(true);
+    m_minimap->setForceHidden(!m_config.minimap_shown);
 
-    m_gview->setResizeAnchor(QGraphicsView::ViewportAnchor::AnchorUnderMouse);
-    m_gview->setTransformationAnchor(QGraphicsView::ViewportAnchor::AnchorViewCenter);
     setLayout(layout);
     m_hscrollbar = m_gview->horizontalScrollBar();
     m_vscrollbar = m_gview->verticalScrollBar();
-    m_gview->installEventFilter(this);
-    connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
 
-    connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
+    if (!m_config.vscrollbar_auto_hide)
+        m_gview->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
 
-    connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
+    if (!m_config.vscrollbar_shown)
+        m_gview->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    if (!m_config.hscrollbar_auto_hide)
+        m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    if (!m_config.hscrollbar_shown)
+        m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    // m_gview->installEventFilter(this);
+
+    if (m_config.minimap_shown)
+    {
+        connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
+        connect(m_vscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
+        connect(m_gview, &GraphicsView::openFilesRequested, this, &ImageView::openFilesRequested);
+    }
 }
 
 void
@@ -191,6 +206,35 @@ ImageView::scrollDown() noexcept
     m_vscrollbar->setValue(m_vscrollbar->value() - 30);
 }
 
+
+void
+ImageView::flipLeft() noexcept
+{
+    QPixmap pix = m_pix_item->pixmap();
+    pix = pix.transformed(QTransform().scale(-1, 1));
+    m_pix_item->setPixmap(pix);
+}
+
+void
+ImageView::flipRight() noexcept
+{
+    QPixmap pix = m_pix_item->pixmap();
+    pix = pix.transformed(QTransform().scale(1, 1));
+    m_pix_item->setPixmap(pix);
+}
+
+void
+ImageView::flipUp() noexcept
+{
+}
+
+void
+ImageView::flipDown() noexcept
+{
+}
+
+
+
 QString
 ImageView::fileName() noexcept
 {
@@ -301,6 +345,9 @@ ImageView::hasMoreThanOneFrame() noexcept
 void
 ImageView::updateMinimapRegion() noexcept
 {
+    if (m_minimap->forceHidden())
+        return;
+
     QRectF visible = m_gview->mapToScene(m_gview->viewport()->rect()).boundingRect();
     QRectF image   = m_pix_item->sceneBoundingRect(); // Full image, in scene coords
 

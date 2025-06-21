@@ -16,11 +16,13 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "Config.hpp"
+
 class ImageView : public QWidget
 {
     Q_OBJECT
 public:
-    ImageView(QWidget *parent = nullptr);
+    ImageView(const Config &config, QWidget *parent = nullptr);
 
     void openFile(const QString &path) noexcept;
     inline void setDPR(float dpr) noexcept
@@ -40,6 +42,11 @@ public:
     void scrollRight() noexcept;
     void scrollUp() noexcept;
     void scrollDown() noexcept;
+    void flipLeft() noexcept;
+    void flipRight() noexcept;
+    void flipUp() noexcept;
+    void flipDown() noexcept;
+
     QString fileName() noexcept;
     QString baseName() noexcept;
     inline QString filePath() noexcept
@@ -95,4 +102,5 @@ private:
     QScrollBar *m_vscrollbar, *m_hscrollbar;
     QMovie *m_movie{nullptr};
     Minimap *m_minimap{nullptr};
+    Config m_config;
 };

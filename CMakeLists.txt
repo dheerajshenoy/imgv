@@ -37,6 +37,7 @@ add_executable(${PROJECT_NAME}
     src/ElidableLabel.hpp
     src/TabWidget.cpp
     src/Minimap.hpp
+    src/Config.hpp
 )
 
 include_directories(${MAGICKPP_INCLUDE_DIRS})
