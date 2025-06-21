@@ -31,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setAttribute(Qt::WA_NativeWindow);
     Magick::InitializeMagick(nullptr);
     QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+    setMinimumSize(600, 400);
 }
 
 void
