@@ -35,7 +35,7 @@ public:
     void initConnections() noexcept;
     void handleFileDrop() noexcept;
 
-    void OpenFile(QString filepath = QString()) noexcept;
+    void OpenFile(const QString &filepath = QString()) noexcept;
     void OpenFiles(const QList<QString> &files) noexcept;
     void CloseFile() noexcept;
     void ZoomIn() noexcept;
