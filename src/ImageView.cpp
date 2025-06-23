@@ -1,12 +1,17 @@
 #include "ImageView.hpp"
+
 #include "GraphicsView.hpp"
 
+#include <QEvent>
 #include <QFileInfo>
 #include <QGraphicsProxyWidget>
+#include <QMessageBox>
+#include <QMimeDatabase>
+#include <QScrollBar>
+#include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
-#include <qevent.h>
-#include <qscrollbar.h>
-#include <qthreadpool.h>
+#include <avif/avif.h>
+#include <fstream>
 
 ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m_config(config)
 {
@@ -41,8 +46,6 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     if (!m_config.hscrollbar_shown)
         m_gview->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    // m_gview->installEventFilter(this);
-
     if (m_config.minimap_shown)
     {
         connect(m_hscrollbar, &QScrollBar::valueChanged, this, [&](int /*value */) { updateMinimapRegion(); });
@@ -64,9 +67,22 @@ ImageView::openFile(const QString &filepath) noexcept
 
     m_isGif = false;
     stopGifAnimation();
-    render();
 
-    m_minimap->setPixmap(m_pix_item->pixmap());
+    m_mimeType = getMimeType(filepath);
+
+    bool success = false;
+
+    if (m_mimeType == "image/avif")
+        success = renderAvif();
+    else
+        success = render();
+
+    if (!success)
+    {
+        QMessageBox::critical(this, "Error opening image", "Failed to open image: " + filepath);
+        return;
+    }
+
     m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
     m_gview->centerOn(m_pix_item);
 }
@@ -87,31 +103,116 @@ ImageView::magickImageToQImage(Magick::Image &image) noexcept
     QImage img(width, height, imgFormat);
     image.write(0, 0, width, height, format, Magick::CharPixel, img.bits());
 
-    img.setDevicePixelRatio(m_dpr);
-
-    // Copy to detach from original buffer (Magick might reuse or destroy it)
     return img;
 }
 
-void
+QImage
+ImageView::avifToQImage() noexcept
+{
+    QImage img;
+    int width, height;
+    std::vector<uint8_t> pixels;
+    std::string filename = m_filepath.toStdString();
+    std::ifstream file(filename, std::ios::binary | std::ios::ate);
+    if (!file)
+    {
+        QMessageBox::critical(this, "Open File", "Failed to open file");
+        qCritical() << "Failed to open file";
+        return img;
+    }
+
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::vector<uint8_t> buffer(size);
+    if (!file.read(reinterpret_cast<char *>(buffer.data()), size))
+    {
+        QMessageBox::critical(this, "Open File", "Failed to read file");
+        qCritical() << "Failed to read file\n";
+        return img;
+    }
+
+    // Set up decoder
+    avifDecoder *decoder = avifDecoderCreate();
+    avifResult result    = avifDecoderSetIOMemory(decoder, buffer.data(), buffer.size());
+    if (result != AVIF_RESULT_OK)
+    {
+        const char *err = avifResultToString(result);
+        qCritical() << "Failed to set AVIF IO: " << err << "\n";
+        QMessageBox::critical(this, "Open File", err);
+        avifDecoderDestroy(decoder);
+        return img;
+    }
+
+    result = avifDecoderParse(decoder);
+    if (result != AVIF_RESULT_OK)
+    {
+        const char *err = avifResultToString(result);
+        qCritical() << "Failed to parse AVIF: " << err << "\n";
+        QMessageBox::critical(this, "Open File", err);
+        avifDecoderDestroy(decoder);
+        return img;
+    }
+
+    result = avifDecoderNextImage(decoder);
+    if (result != AVIF_RESULT_OK)
+    {
+        const char *err = avifResultToString(result);
+        qCritical() << "Failed to decode AVIF image: " << err << "\n";
+        avifDecoderDestroy(decoder);
+        return img;
+    }
+
+    avifRGBImage rgb;
+    avifRGBImageSetDefaults(&rgb, decoder->image);
+    rgb.format = AVIF_RGB_FORMAT_RGBA;
+
+    avifResult resalloc = avifRGBImageAllocatePixels(&rgb);
+    avifResult resconv = avifImageYUVToRGB(decoder->image, &rgb);
+
+    width  = rgb.width;
+    height = rgb.height;
+    pixels.assign(rgb.pixels, rgb.pixels + rgb.rowBytes * height);
+
+    avifRGBImageFreePixels(&rgb);
+    avifDecoderDestroy(decoder);
+
+    img = QImage(pixels.data(), width, height, QImage::Format_RGBA8888).copy();
+    return img;
+}
+
+bool
+ImageView::renderAvif() noexcept
+{
+    QImage img = avifToQImage();
+    if (img.isNull())
+        return false;
+    loadImage(img);
+    return true;
+}
+
+bool
 ImageView::render() noexcept
 {
     Magick::Image image;
-    image.read(m_filepath.toStdString());
+    try
+    {
+        image.read(m_filepath.toStdString());
+    }
+    catch (const Magick::ErrorFileOpen &e)
+    {
+        QMessageBox::critical(this, "Error opening image", e.what());
+        return false;
+    }
 
     if (hasMoreThanOneFrame())
         renderAnimatedImage();
     else
     {
         QImage img = magickImageToQImage(image);
-        m_pix      = QPixmap::fromImage(img);
-        m_pix.setDevicePixelRatio(m_dpr);
-        m_pix_item->setPixmap(m_pix);
-
-        int margin    = 100;
-        QRectF padded = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
-        m_gview->setSceneRect(padded);
+        loadImage(img);
     }
+
+    return true;
 }
 
 void
@@ -138,6 +239,7 @@ ImageView::rotateClock() noexcept
     QTransform mat = m_gview->transform();
     mat.rotate(90);
     m_gview->setTransform(mat);
+    m_minimap->setTransform(mat);
     m_gview->centerOn(m_pix_item);
 }
 
@@ -148,6 +250,7 @@ ImageView::rotateAnticlock() noexcept
     QTransform mat = m_gview->transform();
     mat.rotate(-90);
     m_gview->setTransform(mat);
+    m_minimap->setTransform(mat);
     m_gview->centerOn(m_pix_item);
 }
 
@@ -206,34 +309,23 @@ ImageView::scrollDown() noexcept
     m_vscrollbar->setValue(m_vscrollbar->value() - 30);
 }
 
-
 void
-ImageView::flipLeft() noexcept
+ImageView::flipLeftRight() noexcept
 {
     QPixmap pix = m_pix_item->pixmap();
-    pix = pix.transformed(QTransform().scale(-1, 1));
+    pix         = pix.transformed(QTransform().scale(-1, 1));
     m_pix_item->setPixmap(pix);
+    m_minimap->setPixmap(pix);
 }
 
 void
-ImageView::flipRight() noexcept
+ImageView::flipUpDown() noexcept
 {
     QPixmap pix = m_pix_item->pixmap();
-    pix = pix.transformed(QTransform().scale(1, 1));
+    pix         = pix.transformed(QTransform().scale(1, -1));
     m_pix_item->setPixmap(pix);
+    m_minimap->setPixmap(pix);
 }
-
-void
-ImageView::flipUp() noexcept
-{
-}
-
-void
-ImageView::flipDown() noexcept
-{
-}
-
-
 
 QString
 ImageView::fileName() noexcept
@@ -400,4 +492,37 @@ QSize
 ImageView::size() noexcept
 {
     return m_pix_item->pixmap().size();
+}
+
+QString
+ImageView::getMimeType(const QString &filePath) noexcept
+{
+    QMimeDatabase db;
+    QMimeType type = db.mimeTypeForFile(filePath);
+    return type.name();
+}
+
+void
+ImageView::loadImage(const QImage &img) noexcept
+{
+    m_pix = QPixmap::fromImage(img);
+
+    m_pix.setDevicePixelRatio(m_dpr);
+    m_pix_item->setPixmap(m_pix);
+    m_minimap->setPixmap(m_pix);
+
+    int margin    = 50;
+    QRectF padded = m_pix_item->boundingRect().adjusted(-margin, -margin, margin, margin);
+    m_gview->setSceneRect(padded);
+}
+
+void
+ImageView::setDPR(float dpr) noexcept
+{
+    m_dpr = dpr;
+
+    if (m_mimeType == "image/avif")
+        renderAvif();
+    else
+        render();
 }

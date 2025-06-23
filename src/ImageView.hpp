@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Config.hpp"
 #include "GraphicsView.hpp"
 #include "Minimap.hpp"
 
@@ -16,8 +17,6 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "Config.hpp"
-
 class ImageView : public QWidget
 {
     Q_OBJECT
@@ -25,11 +24,7 @@ public:
     ImageView(const Config &config, QWidget *parent = nullptr);
 
     void openFile(const QString &path) noexcept;
-    inline void setDPR(float dpr) noexcept
-    {
-        m_dpr = dpr;
-        render();
-    }
+    void setDPR(float dpr) noexcept;
 
     QSize size() noexcept;
     void zoomIn() noexcept;
@@ -42,10 +37,8 @@ public:
     void scrollRight() noexcept;
     void scrollUp() noexcept;
     void scrollDown() noexcept;
-    void flipLeft() noexcept;
-    void flipRight() noexcept;
-    void flipUp() noexcept;
-    void flipDown() noexcept;
+    void flipLeftRight() noexcept;
+    void flipUpDown() noexcept;
 
     QString fileName() noexcept;
     QString baseName() noexcept;
@@ -79,7 +72,10 @@ protected:
     void dropEvent(QDropEvent *e) override;
 
 private:
-    void render() noexcept;
+    void loadImage(const QImage &img) noexcept;
+    bool render() noexcept;
+    bool renderAvif() noexcept;
+    QImage avifToQImage() noexcept;
     void renderAnimatedImage() noexcept;
     QString humanReadableSize(qint64 bytes) noexcept;
     void updateGifFrame(int frameNumber) noexcept;
@@ -87,6 +83,7 @@ private:
     void startGifAnimation() noexcept;
     bool hasMoreThanOneFrame() noexcept;
     void updateMinimapRegion() noexcept;
+    QString getMimeType(const QString &filepath) noexcept;
 
     bool m_isGif{false}, m_isMinimapMode{false};
 
@@ -103,4 +100,5 @@ private:
     QMovie *m_movie{nullptr};
     Minimap *m_minimap{nullptr};
     Config m_config;
+    QString m_mimeType;
 };

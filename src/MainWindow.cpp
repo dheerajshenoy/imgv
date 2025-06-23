@@ -77,7 +77,7 @@ MainWindow::initDefaultKeybinds() noexcept
     m_config.shortcutMap["k"]      = "scroll_up";
     m_config.shortcutMap["l"]      = "scroll_right";
     m_config.shortcutMap["t"]      = "toggle_tabs";
-    m_config.shortcutMap["F11"]      = "toggle_fullscreen";
+    m_config.shortcutMap["F11"]    = "toggle_fullscreen";
 
     for (auto iter = m_config.shortcutMap.begin(); iter != m_config.shortcutMap.end(); iter++)
     {
@@ -89,9 +89,8 @@ MainWindow::initDefaultKeybinds() noexcept
 void
 MainWindow::initConnections() noexcept
 {
-    QWindow *win = this->windowHandle();
-    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Unset);
-    m_dpr = this->devicePixelRatioF();
+    m_dpr = m_tab_widget->window()->devicePixelRatioF();
+    QWindow *win = window()->windowHandle();
     if (win)
     {
         connect(win, &QWindow::screenChanged, this, [&](QScreen *screen)
@@ -277,10 +276,10 @@ QStringList
 MainWindow::openFileDialog() noexcept
 {
     QStringList extensions = {
-        "*.jpg", "*.bmp", "*.cgm", "*.dpx", "*.emf", "*.exr", "*.fits", "*.gif",  "*.heic", "*.heif", "*.jp2", "*.jpeg",
-        "*.jxl", "*.pcx", "*.png", "*.psd", "*.sgi", "*.svg", "*.tga",  "*.tiff", "*.ico",  "*.webp", "*.wmf", "*.xbm",
-        "*.cr2", "*.crw", "*.dds", "*.eps", "*.raf", "*.jng", "*.dcr",  "*.mrw",  "*.nef",  "*.orf",  "*.pef", "*.pict",
-        "*.pnm", "*.pbm", "*.pgm", "*.ppm", "*.rgb", "*.arw", "*.srf",  "*.sr2",  "*.xcf",  "*.xpm"};
+        "*.avif", "*.jpg", "*.bmp", "*.cgm", "*.dpx", "*.emf", "*.exr", "*.fits", "*.gif",  "*.heic", "*.heif", "*.jp2",
+        "*.jpeg", "*.jxl", "*.pcx", "*.png", "*.psd", "*.sgi", "*.svg", "*.tga",  "*.tiff", "*.ico",  "*.webp", "*.wmf",
+        "*.xbm",  "*.cr2", "*.crw", "*.dds", "*.eps", "*.raf", "*.jng", "*.dcr",  "*.mrw",  "*.nef",  "*.orf",  "*.pef",
+        "*.pict", "*.pnm", "*.pbm", "*.pgm", "*.ppm", "*.rgb", "*.arw", "*.srf",  "*.sr2",  "*.xcf",  "*.xpm"};
 
     QString filter = QString("Image Files (%1);;All Files (*)").arg(extensions.join(' '));
 
@@ -321,31 +320,31 @@ MainWindow::initConfig() noexcept
     }
 
     // Read tab options
-    auto tabs = toml["tabs"];
-    m_config.tabs_shown = tabs["shown"].value_or(true);
+    auto tabs              = toml["tabs"];
+    m_config.tabs_shown    = tabs["shown"].value_or(true);
     m_config.tabs_autohide = tabs["auto_hide"].value_or(true);
 
     m_tab_widget->setVisible(m_config.tabs_shown);
     m_tab_widget->setTabBarAutoHide(m_config.tabs_autohide);
 
     // Read scrollbars options
-    auto hscrollbar = toml["hscrollbar"];
-    m_config.hscrollbar_shown = hscrollbar["shown"].value_or(true);
+    auto hscrollbar               = toml["hscrollbar"];
+    m_config.hscrollbar_shown     = hscrollbar["shown"].value_or(true);
     m_config.hscrollbar_auto_hide = hscrollbar["auto_hide"].value_or(true);
 
-    auto vscrollbar = toml["vscrollbar"];
-    m_config.vscrollbar_shown = vscrollbar["shown"].value_or(true);
+    auto vscrollbar               = toml["vscrollbar"];
+    m_config.vscrollbar_shown     = vscrollbar["shown"].value_or(true);
     m_config.vscrollbar_auto_hide = vscrollbar["auto_hide"].value_or(true);
 
     // Read minimap options
     auto minimap = toml["minimap"];
 
-    m_config.minimap_shown = minimap["shown"].value_or(false);
+    m_config.minimap_shown     = minimap["shown"].value_or(false);
     m_config.auto_hide_minimap = minimap["auto_hide"].value_or(true);
 
     auto overlay = minimap["overlay"];
 
-    m_config.minimap_overlay_color = overlay["color"].value_or("#55FF0000");
+    m_config.minimap_overlay_color        = overlay["color"].value_or("#55FF0000");
     m_config.minimap_overlay_border_color = overlay["border"].value_or("#5500FF00");
     m_config.minimap_overlay_border_width = overlay["border_width"].value<int>().value();
 
@@ -463,9 +462,7 @@ MainWindow::initCommandMap() noexcept
     {
         Flip(Direction::DOWN);
     };
-
 }
-
 
 void
 MainWindow::setupKeybinding(const QString &action, const QString &key) noexcept
@@ -480,24 +477,20 @@ MainWindow::setupKeybinding(const QString &action, const QString &key) noexcept
     m_config.shortcutMap[action] = key;
 }
 
-void MainWindow::Flip(Direction dir) noexcept
+void
+MainWindow::Flip(Direction dir) noexcept
 {
     switch (dir)
     {
         case Direction::LEFT:
-            m_imgv->flipLeft();
-            break;
-
-        case Direction::RIGHT:
-            m_imgv->flipRight();
+            m_imgv->flipLeftRight();
             break;
 
         case Direction::UP:
-            m_imgv->flipUp();
+            m_imgv->flipUpDown();
             break;
 
-        case Direction::DOWN:
-            m_imgv->flipDown();
+        default:
             break;
     }
 }

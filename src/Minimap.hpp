@@ -31,8 +31,15 @@ public:
 
     void setPixmap(const QPixmap &pix) noexcept
     {
-        m_pix_item->setPixmap(pix);
-        m_scene->setSceneRect(pix.rect());
+        qreal dpr = devicePixelRatioF();
+        QPixmap scaled_pix = pix;
+        qDebug() << pix.devicePixelRatioF();
+        if (pix.devicePixelRatioF() != dpr)
+        {
+            scaled_pix.setDevicePixelRatio(dpr);
+        }
+        m_pix_item->setPixmap(scaled_pix);
+        m_scene->setSceneRect(QRectF(QPointF(0, 0), scaled_pix.size() / dpr));
         fitInView(m_scene->sceneRect(), Qt::KeepAspectRatio);
     }
 
@@ -57,7 +64,6 @@ public:
         if (state)
             setVisible(false);
     }
-
 
     inline void setOverlayRectBorderWidth(int width) noexcept
     {

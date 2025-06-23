@@ -20,6 +20,7 @@ set(CMAKE_CXX_FLAGS_DEBUG " -fno-omit-frame-pointer -ggdb3 -O0 -Wall -Wextra")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core Sql)
+find_package(libavif REQUIRED)
 
 add_definitions( -DMAGICKCORE_QUANTUM_DEPTH=16 )
 add_definitions( -DMAGICKCORE_HDRI_ENABLE=0 )
@@ -52,6 +53,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt6::Core
     ${ImageMagick_LIBRARIES}
     ${MAGICKPP_LIBRARIES}
+    avif
 )
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
