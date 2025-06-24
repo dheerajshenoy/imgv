@@ -9,7 +9,7 @@ main(int argc, char *argv[])
     MainWindow mw;
 
     argparse::ArgumentParser program("iv", __IV_VERSION);
-    program.add_argument("files").remaining();
+    program.add_argument("files").remaining().metavar("FILE_PATH(s)");
 
     try
     {
