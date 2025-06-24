@@ -7,7 +7,7 @@
 2. [Installation](#installation)
 3. [Usage](#usage)
 4. [Default Keybindings](#default-keybindings)
-5. [TODO](#todo)
+5. [Configuration](#configuration)
 
 ## Supported Image Formats
 
@@ -15,6 +15,8 @@
 + Includes support for animated images.
 
 [Look here](https://imagemagick.org/script/formats.php#supported)
+
++ AVIF support [OPTIONAL]
 
 ## Installation
 
@@ -24,6 +26,10 @@
     - ImageMagick
     - cmake & ninja (for building)
     - libavif [OPTIONAL] (for avif image support)
+
+> [!NOTE]
+> libavif is most probably installed on most systems already.
+> If found during compilation, AVIF support will automatically be enabled.
 
 2. Run the following commands to clone the repo and build iv
 
@@ -64,6 +70,7 @@ iv <path-to-files>
 | t         | Toggle Tabs         |
 | m         | Toggle Minimap      |
 
-## TODO
+## Configuration
 
-- Allow for user keybindings
+Iv is configured using `TOML`. The configuration file is expected at `~/.config/iv/config.toml`.
+A sample configuration file is included in this repository.
