@@ -23,7 +23,7 @@ class ImageView : public QWidget
 public:
     ImageView(const Config &config, QWidget *parent = nullptr);
 
-    void openFile(const QString &path) noexcept;
+    bool openFile(const QString &path) noexcept;
     void setDPR(float dpr) noexcept;
 
     QSize size() noexcept;
@@ -61,6 +61,8 @@ public:
         updateMinimapRegion();
     }
 
+    inline bool success() noexcept { return m_success; }
+
     void updateMinimapPosition() noexcept;
 signals:
     void openFilesRequested(const QList<QString> &files);
@@ -75,8 +77,10 @@ protected:
 private:
     void loadImage(const QImage &img) noexcept;
     bool render() noexcept;
+#ifdef HAS_LIBAVIF
     bool renderAvif() noexcept;
     QImage avifToQImage() noexcept;
+#endif
     void renderAnimatedImage() noexcept;
     QString humanReadableSize(qint64 bytes) noexcept;
     void updateGifFrame(int frameNumber) noexcept;
@@ -86,7 +90,7 @@ private:
     void updateMinimapRegion() noexcept;
     QString getMimeType(const QString &filepath) noexcept;
 
-    bool m_isGif{false}, m_isMinimapMode{false};
+    bool m_isGif{false}, m_isMinimapMode{false}, m_success{false};
 
     float m_dpr{1.0f};
     QImage magickImageToQImage(Magick::Image &image) noexcept;

@@ -11,7 +11,11 @@
 #include <QScrollBar>
 #include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
+
+#ifdef HAS_LIBAVIF
 #include <avif/avif.h>
+#endif
+
 #include <fstream>
 
 ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m_config(config)
@@ -55,7 +59,7 @@ ImageView::ImageView(const Config &config, QWidget *parent) : QWidget(parent), m
     }
 }
 
-void
+bool
 ImageView::openFile(const QString &filepath) noexcept
 {
     m_filepath           = filepath;
@@ -71,21 +75,33 @@ ImageView::openFile(const QString &filepath) noexcept
 
     m_mimeType = getMimeType(filepath);
 
-    bool success = false;
+    m_success = false;
 
     if (m_mimeType == "image/avif")
+#ifdef HAS_LIBAVIF
         success = renderAvif();
+#else
+    {
+        QMessageBox::warning(this, "Open File",
+                             "You have tried to open an AVIF file. IV currently does not open AVIF. Please install "
+                             "`libavif` library and then build IV again.");
+        m_success = false;
+        return m_success;
+    }
+#endif
     else
-        success = render();
+        m_success = render();
 
-    if (!success)
+    if (!m_success)
     {
         QMessageBox::critical(this, "Error opening image", "Failed to open image: " + filepath);
-        return;
+        return m_success;
     }
 
     m_gview->fitInView(m_pix_item, Qt::KeepAspectRatio);
     m_gview->centerOn(m_pix_item);
+
+    return m_success;
 }
 
 QImage
@@ -107,6 +123,7 @@ ImageView::magickImageToQImage(Magick::Image &image) noexcept
     return img;
 }
 
+#ifdef HAS_LIBAVIF
 QImage
 ImageView::avifToQImage() noexcept
 {
@@ -190,6 +207,7 @@ ImageView::renderAvif() noexcept
     loadImage(img);
     return true;
 }
+#endif
 
 bool
 ImageView::render() noexcept
@@ -532,8 +550,12 @@ ImageView::setDPR(float dpr) noexcept
     if (m_pix_item->pixmap().isNull())
         return;
 
+#ifdef HAS_LIBAVIF
     if (m_mimeType == "image/avif")
         renderAvif();
     else
         render();
+#else
+    render();
+#endif
 }

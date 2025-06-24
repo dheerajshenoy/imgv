@@ -89,7 +89,7 @@ MainWindow::initDefaultKeybinds() noexcept
 void
 MainWindow::initConnections() noexcept
 {
-    m_dpr = m_tab_widget->window()->devicePixelRatioF();
+    m_dpr        = m_tab_widget->window()->devicePixelRatioF();
     QWindow *win = window()->windowHandle();
     if (win)
     {
@@ -158,7 +158,9 @@ MainWindow::OpenFile(const QString &filepath) noexcept
         fp = fp.replace(0, 1, QString::fromLocal8Bit(getenv("HOME")));
 
     m_imgv = new ImageView(m_config, m_tab_widget);
-    m_imgv->openFile(filepath);
+    bool success = m_imgv->openFile(filepath);
+    if (!success)
+        return;
     m_tab_widget->addTab(m_imgv, fp);
     m_tab_widget->setCurrentWidget(m_imgv); // Make it the active tab
     connect(m_imgv, &ImageView::openFilesRequested, this,
@@ -276,10 +278,14 @@ QStringList
 MainWindow::openFileDialog() noexcept
 {
     QStringList extensions = {
-        "*.avif", "*.jpg", "*.bmp", "*.cgm", "*.dpx", "*.emf", "*.exr", "*.fits", "*.gif",  "*.heic", "*.heif", "*.jp2",
-        "*.jpeg", "*.jxl", "*.pcx", "*.png", "*.psd", "*.sgi", "*.svg", "*.tga",  "*.tiff", "*.ico",  "*.webp", "*.wmf",
-        "*.xbm",  "*.cr2", "*.crw", "*.dds", "*.eps", "*.raf", "*.jng", "*.dcr",  "*.mrw",  "*.nef",  "*.orf",  "*.pef",
-        "*.pict", "*.pnm", "*.pbm", "*.pgm", "*.ppm", "*.rgb", "*.arw", "*.srf",  "*.sr2",  "*.xcf",  "*.xpm"};
+#ifdef HAS_LIBAVIF
+        "*.avif",
+#endif
+        "*.jpg",  "*.bmp",  "*.cgm", "*.dpx", "*.emf", "*.exr",  "*.fits", "*.gif", "*.heic", "*.heif",
+        "*.jp2",  "*.jpeg", "*.jxl", "*.pcx", "*.png", "*.psd",  "*.sgi",  "*.svg", "*.tga",  "*.tiff",
+        "*.ico",  "*.webp", "*.wmf", "*.xbm", "*.cr2", "*.crw",  "*.dds",  "*.eps", "*.raf",  "*.jng",
+        "*.dcr",  "*.mrw",  "*.nef", "*.orf", "*.pef", "*.pict", "*.pnm",  "*.pbm", "*.pgm",  "*.ppm",
+        "*.rgb",  "*.arw",  "*.srf", "*.sr2", "*.xcf", "*.xpm"};
 
     QString filter = QString("Image Files (%1);;All Files (*)").arg(extensions.join(' '));
 
@@ -289,7 +295,7 @@ MainWindow::openFileDialog() noexcept
 void
 MainWindow::updateFileinfoInPanel() noexcept
 {
-    if (!m_imgv)
+    if (!m_imgv || !m_imgv->success())
         return;
 
     const QString &filepath = m_imgv->filePath();

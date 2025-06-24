@@ -23,6 +23,7 @@
     - Qt6
     - ImageMagick
     - cmake & ninja (for building)
+    - libavif [OPTIONAL] (for avif image support)
 
 2. Run the following commands to clone the repo and build iv
 
