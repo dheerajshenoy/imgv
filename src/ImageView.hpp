@@ -57,7 +57,8 @@ public:
 
     inline void toggleMinimap() noexcept
     {
-        m_minimap->setVisible(!m_minimap->isVisible());
+        m_minimap->setForceHidden(!m_minimap->forceHidden());
+        updateMinimapRegion();
     }
 
     void updateMinimapPosition() noexcept;
