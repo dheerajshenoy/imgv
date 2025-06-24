@@ -1,6 +1,7 @@
 #include "ImageView.hpp"
 
 #include "GraphicsView.hpp"
+#include "Magick++/Exception.h"
 
 #include <QEvent>
 #include <QFileInfo>
@@ -167,7 +168,7 @@ ImageView::avifToQImage() noexcept
     rgb.format = AVIF_RGB_FORMAT_RGBA;
 
     avifResult resalloc = avifRGBImageAllocatePixels(&rgb);
-    avifResult resconv = avifImageYUVToRGB(decoder->image, &rgb);
+    avifResult resconv  = avifImageYUVToRGB(decoder->image, &rgb);
 
     width  = rgb.width;
     height = rgb.height;
@@ -200,7 +201,14 @@ ImageView::render() noexcept
     }
     catch (const Magick::ErrorFileOpen &e)
     {
-        QMessageBox::critical(this, "Error opening image", e.what());
+        qDebug() << "Error opening image: " << e.what();
+        QMessageBox::critical(this, "Error opening image: ", e.what());
+        return false;
+    }
+    catch (const Magick::ErrorMissingDelegate &e)
+    {
+        qDebug() << "Error missing delegate: " << e.what();
+        QMessageBox::critical(this, "Error missing delegate: ", e.what());
         return false;
     }
 
@@ -520,6 +528,9 @@ void
 ImageView::setDPR(float dpr) noexcept
 {
     m_dpr = dpr;
+
+    if (m_pix_item->pixmap().isNull())
+        return;
 
     if (m_mimeType == "image/avif")
         renderAvif();
