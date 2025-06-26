@@ -33,7 +33,6 @@ public:
     {
         qreal dpr = devicePixelRatioF();
         QPixmap scaled_pix = pix;
-        qDebug() << pix.devicePixelRatioF();
         if (pix.devicePixelRatioF() != dpr)
         {
             scaled_pix.setDevicePixelRatio(dpr);

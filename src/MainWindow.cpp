@@ -252,7 +252,6 @@ MainWindow::ToggleMinimap() noexcept
 void
 MainWindow::dropEvent(QDropEvent *e)
 {
-    qDebug() << "DD";
     if (e->mimeData()->hasUrls())
     {
         QList<QString> files;
